@@ -9,6 +9,8 @@ import readline from 'readline';
 import { execSync } from 'child_process';
 import * as prettyCli from 'pretty-cli';
 import chalk from 'chalk';
+import ora from 'ora';
+import columnify from 'columnify';
 
 dotenv.config();
 
@@ -29,11 +31,15 @@ async function getGitDiff(): Promise<string> {
 }
 
 async function readPRTemplate(): Promise<string> {
+  const spinner = ora('Reading PR template...').start();
+
   try {
     const templatePath = path.join(process.cwd(), 'prTemplate.md');
-    return await fs.readFile(templatePath, 'utf-8');
+    const template = await fs.readFile(templatePath, 'utf-8');
+    spinner.succeed('PR template read successfully.');
+    return template;
   } catch (error) {
-    console.warn('Warning: Unable to read PR template. Using default template.');
+    spinner.fail('Unable to read PR template. Using default template.');
     return '## Summary:\n\n## Test Plan:\n\n## Review:';
   }
 }
@@ -135,8 +141,13 @@ async function main() {
   console.log(chalk.green('OPENAI_API_KEY:'), argv.openaiApiKey ? '[REDACTED]' : 'Not set');
 
   try {
+    const spinner = ora('Fetching git diff...').start();
     const gitDiff = await getGitDiff();
+    spinner.succeed('Git diff fetched.');
+
+    spinner.start('Getting current branch...');
     const sourceBranch = await getCurrentBranch();
+    spinner.succeed('Current branch obtained.');
     const defaultTargetBranch = 'main'; // Assuming 'main' is your default target branch
     const targetBranch = sourceBranch === defaultTargetBranch ? 'develop' : defaultTargetBranch;
 
@@ -145,11 +156,16 @@ async function main() {
     }
 
     if (!argv.title) {
+      const titleSpinner = ora('Generating pull request title...').start();
       argv.title = await generateWithAI("Generate a concise and descriptive pull request title based on the following git diff:", gitDiff);
+      titleSpinner.succeed('Pull request title generated.');
+
     }
 
     if (!argv.description) {
+      const descriptionSpinner = ora('Generating pull request description...').start();
       const prTemplate = await readPRTemplate();
+      descriptionSpinner.succeed('Pull request description generated.');
       argv.description = await generatePRDescription(gitDiff, prTemplate);
     }
 
@@ -221,6 +237,7 @@ async function main() {
       return;
     }
 
+    console.log(chalk.blue('Creating pull request...'));
     const pullRequestId = await createPullRequest({
       organization: argv.organization || '',
       project: argv.project || '',
@@ -232,18 +249,25 @@ async function main() {
       sourceBranch: sourceBranch,
       personalAccessToken: argv.personalAccessToken || '',
     });
+    spinner.start('Creating pull request...');
 
     if (!argv.organization || !argv.project || !argv.repositoryId) {
       console.warn('Warning: Some required parameters were not provided. Check your .env file or command-line arguments.');
     }
 
-    console.log('Pull request created successfully:');
-    console.log(`Pull Request ID: ${pullRequestId}`);
-    console.log(`Title: ${argv.title}`);
-    console.log(`Source Branch: ${sourceBranch}`);
-    console.log(`Target Branch: ${targetBranch}`);
-    console.log(`Description: ${argv.description}`);
-    console.log(`View PR: https://dev.azure.com/${argv.organization}/${argv.project}/_git/${argv.repositoryId}/pullrequest/${pullRequestId}`);
+    spinner.succeed('Pull request created successfully.');
+
+    console.log(chalk.green('Pull request created successfully:'));
+    const prDetails = {
+      'Pull Request ID': pullRequestId,
+      'Title': argv.title,
+      'Source Branch': sourceBranch,
+      'Target Branch': targetBranch,
+      'Description': argv.description,
+      'View PR': `https://dev.azure.com/${argv.organization}/${argv.project}/_git/${argv.repositoryId}/pullrequest/${pullRequestId}`
+    };
+
+    console.log(columnify(prDetails, { columnSplitter: ' | ' }));
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.log(chalk.red('Error creating pull request:'), error.message);
