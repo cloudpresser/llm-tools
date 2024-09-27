@@ -1,14 +1,21 @@
 import yargs from 'yargs';
 import { createPullRequest } from './src/azureDevOpsClient';
 import dotenv from 'dotenv';
+import simpleGit from 'simple-git';
 
 dotenv.config();
 
+async function getCurrentBranch(): Promise<string> {
+  const git = simpleGit();
+  const branchSummary = await git.branch();
+  return branchSummary.current;
+}
+
 async function main() {
   console.log('Environment variables:');
-  console.log('ORGANIZATION:', process.env.ORGANIZATION);
-  console.log('PROJECT:', process.env.PROJECT);
-  console.log('REPOSITORY_ID:', process.env.REPOSITORY_ID);
+  console.log('ORGANIZATION:', process.env.ORGANIZATION || 'Not set');
+  console.log('PROJECT:', process.env.PROJECT || 'Not set');
+  console.log('REPOSITORY_ID:', process.env.REPOSITORY_ID || 'Not set');
   console.log('PERSONAL_ACCESS_TOKEN:', process.env.PERSONAL_ACCESS_TOKEN ? '[REDACTED]' : 'Not set');
 
   const argv = await yargs(process.argv.slice(2))
@@ -26,16 +33,6 @@ async function main() {
       type: 'string',
       description: 'Repository ID',
       default: process.env.REPOSITORY_ID,
-    })
-    .option('sourceRefName', {
-      type: 'string',
-      description: 'Source branch name (e.g., feature-branch)',
-      demandOption: true,
-    })
-    .option('targetRefName', {
-      type: 'string',
-      description: 'Target branch name (e.g., main)',
-      default: process.env.TARGET_REF_NAME,
     })
     .option('title', {
       type: 'string',
@@ -64,22 +61,40 @@ async function main() {
     process.exit(1);
   }
 
-  console.log('Parsed CLI arguments:');
-  console.log(JSON.stringify(argv, null, 2));
+  console.log('Evaluated CLI arguments:');
+  console.log('ORGANIZATION:', argv.organization || 'Not set');
+  console.log('PROJECT:', argv.project || 'Not set');
+  console.log('REPOSITORY_ID:', argv.repositoryId || 'Not set');
+  console.log('TITLE:', argv.title);
+  console.log('DESCRIPTION:', argv.description);
+  console.log('PERSONAL_ACCESS_TOKEN:', argv.personalAccessToken ? '[REDACTED]' : 'Not set');
 
   try {
-    if (!argv.targetRefName) {
-      throw new Error('Target reference name is not set. Please provide it via command line or set TARGET_REF_NAME in your .env file.');
-    }
+    const currentBranch = await getCurrentBranch();
+
+    const sourceBranch = await getCurrentBranch();
+    const targetBranch = 'main'; // Assuming 'main' is your default target branch
+
+    console.log('Pull Request Parameters:');
+    console.log('Source Branch:', sourceBranch);
+    console.log('Target Branch:', targetBranch);
+    console.log('Organization:', argv.organization || '');
+    console.log('Project:', argv.project || '');
+    console.log('Repository ID:', argv.repositoryId || '');
+    console.log('Title:', argv.title);
+    console.log('Description:', argv.description);
+    console.log('Work Items:', []); // Empty array as per your current implementation
+    console.log('Personal Access Token:', argv.personalAccessToken ? '[REDACTED]' : 'Not set');
 
     const pullRequestId = await createPullRequest({
       organization: argv.organization || '',
       project: argv.project || '',
       repositoryId: argv.repositoryId || '',
+      title: argv.title,
       description: argv.description,
-      workItems: [], // You might want to add an option to input work items
-      targetBranch: argv.targetRefName.replace('refs/heads/', ''),
-      sourceBranch: argv.sourceRefName.replace('refs/heads/', ''),
+      workItems: [],
+      targetBranch: targetBranch,
+      sourceBranch: sourceBranch,
       personalAccessToken: argv.personalAccessToken,
     });
 
@@ -90,8 +105,8 @@ async function main() {
     console.log('Pull request created successfully:');
     console.log(`Pull Request ID: ${pullRequestId}`);
     console.log(`Title: ${argv.title}`);
-    console.log(`Source Branch: ${argv.sourceRefName}`);
-    console.log(`Target Branch: ${argv.targetRefName}`);
+    console.log(`Source Branch: ${sourceBranch}`);
+    console.log(`Target Branch: main`); // Assuming 'main' is your default target branch
     console.log(`Description: ${argv.description}`);
     console.log(`View PR: https://dev.azure.com/${argv.organization}/${argv.project}/_git/${argv.repositoryId}/pullrequest/${pullRequestId}`);
   } catch (error: unknown) {

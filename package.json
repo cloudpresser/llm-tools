@@ -21,6 +21,7 @@
     "axios": "^0.27.2",
     "dotenv": "^16.4.5",
     "inquirer": "8.2.4",
+    "simple-git": "^3.27.0",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
