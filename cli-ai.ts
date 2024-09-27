@@ -7,6 +7,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import readline from 'readline';
 import { execSync } from 'child_process';
+import * as prettyCli from 'pretty-cli';
+import chalk from 'chalk';
 
 dotenv.config();
 
@@ -72,12 +74,12 @@ async function generatePRDescription(gitDiff: string, template: string): Promise
 }
 
 async function main() {
-  console.log('Environment variables:');
-  console.log('ORGANIZATION:', process.env.ORGANIZATION || 'Not set');
-  console.log('PROJECT:', process.env.PROJECT || 'Not set');
-  console.log('REPOSITORY_ID:', process.env.REPOSITORY_ID || 'Not set');
-  console.log('PERSONAL_ACCESS_TOKEN:', process.env.PERSONAL_ACCESS_TOKEN ? '[REDACTED]' : 'Not set');
-  console.log('OPENAI_API_KEY:', process.env.OPENAI_API_KEY ? '[REDACTED]' : 'Not set');
+  console.log(chalk.blue('Environment variables:'));
+  console.log(chalk.green('ORGANIZATION:'), process.env.ORGANIZATION || 'Not set');
+  console.log(chalk.green('PROJECT:'), process.env.PROJECT || 'Not set');
+  console.log(chalk.green('REPOSITORY_ID:'), process.env.REPOSITORY_ID || 'Not set');
+  console.log(chalk.green('PERSONAL_ACCESS_TOKEN:'), process.env.PERSONAL_ACCESS_TOKEN ? '[REDACTED]' : 'Not set');
+  console.log(chalk.green('OPENAI_API_KEY:'), process.env.OPENAI_API_KEY ? '[REDACTED]' : 'Not set');
 
   const argv = await yargs(process.argv.slice(2))
     .option('organization', {
@@ -123,14 +125,14 @@ async function main() {
     throw new Error('Error: OpenAI API Key is not set in the .env file or provided as an argument.');
   }
 
-  console.log('Evaluated CLI arguments:');
-  console.log('ORGANIZATION:', argv.organization || 'Not set');
-  console.log('PROJECT:', argv.project || 'Not set');
-  console.log('REPOSITORY_ID:', argv.repositoryId || 'Not set');
-  console.log('TITLE:', argv.title || 'Not set (will be generated)');
-  console.log('DESCRIPTION:', argv.description || 'Not set (will be generated)');
-  console.log('PERSONAL_ACCESS_TOKEN:', argv.personalAccessToken ? '[REDACTED]' : 'Not set');
-  console.log('OPENAI_API_KEY:', argv.openaiApiKey ? '[REDACTED]' : 'Not set');
+  console.log(chalk.blue('Evaluated CLI arguments:'));
+  console.log(chalk.green('ORGANIZATION:'), argv.organization || 'Not set');
+  console.log(chalk.green('PROJECT:'), argv.project || 'Not set');
+  console.log(chalk.green('REPOSITORY_ID:'), argv.repositoryId || 'Not set');
+  console.log(chalk.green('TITLE:'), argv.title || 'Not set (will be generated)');
+  console.log(chalk.green('DESCRIPTION:'), argv.description || 'Not set (will be generated)');
+  console.log(chalk.green('PERSONAL_ACCESS_TOKEN:'), argv.personalAccessToken ? '[REDACTED]' : 'Not set');
+  console.log(chalk.green('OPENAI_API_KEY:'), argv.openaiApiKey ? '[REDACTED]' : 'Not set');
 
   try {
     const gitDiff = await getGitDiff();
@@ -151,16 +153,16 @@ async function main() {
       argv.description = await generatePRDescription(gitDiff, prTemplate);
     }
 
-    console.log('Pull Request Parameters:');
-    console.log('Source Branch:', sourceBranch);
-    console.log('Target Branch:', targetBranch);
-    console.log('Organization:', argv.organization || '');
-    console.log('Project:', argv.project || '');
-    console.log('Repository ID:', argv.repositoryId || '');
-    console.log('Title:', argv.title);
-    console.log('Description:');
-    console.log(argv.description);
-    console.log('Work Items:', []); // Empty array as per your current implementation
+    console.log(chalk.blue('Pull Request Parameters:'));
+    console.log(chalk.green('Source Branch:'), sourceBranch);
+    console.log(chalk.green('Target Branch:'), targetBranch);
+    console.log(chalk.green('Organization:'), argv.organization || '');
+    console.log(chalk.green('Project:'), argv.project || '');
+    console.log(chalk.green('Repository ID:'), argv.repositoryId || '');
+    console.log(chalk.green('Title:'), argv.title);
+    console.log(chalk.green('Description:'));
+    console.log(chalk.green(argv.description));
+    console.log(chalk.green('Work Items:'), []); // Empty array as per your current implementation
 
     // Function to check if a command is available
     function isCommandAvailable(command: string): boolean {
@@ -244,7 +246,7 @@ async function main() {
     console.log(`View PR: https://dev.azure.com/${argv.organization}/${argv.project}/_git/${argv.repositoryId}/pullrequest/${pullRequestId}`);
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.error('Error creating pull request:', error.message);
+      console.log(chalk.red('Error creating pull request:'), error.message);
       if (error.message.includes('Authentication failed')) {
         console.log('\nAuthentication Error Details:');
         console.log('1. Ensure your Personal Access Token is valid and has not expired.');
@@ -255,17 +257,17 @@ async function main() {
         console.log('4. Try generating a new Personal Access Token and update the .env file.');
       }
     } else {
-      console.error('An unknown error occurred:', error);
+      console.log(chalk.red('An unknown error occurred:'), error);
     }
-    console.log('\nTroubleshooting steps:');
-    console.log('1. Double-check the organization, project, and repository details in your .env file.');
-    console.log('2. Ensure you have the necessary permissions in the Azure DevOps project.');
-    console.log('3. Check your network connection and try again.');
-    console.log('4. If the issue persists, try running the command with verbose logging:');
-    console.log('   DEBUG=axios npx ts-node cli-ai.ts [your-options-here]');
+    console.log(chalk.yellow('\nTroubleshooting steps:'));
+    console.log(chalk.yellow('1. Double-check the organization, project, and repository details in your .env file.'));
+    console.log(chalk.yellow('2. Ensure you have the necessary permissions in the Azure DevOps project.'));
+    console.log(chalk.yellow('3. Check your network connection and try again.'));
+    console.log(chalk.yellow('4. If the issue persists, try running the command with verbose logging:'));
+    console.log(chalk.yellow('   DEBUG=axios npx ts-node cli-ai.ts [your-options-here]'));
   }
 }
 
 main().catch((error) => {
-  console.error('Unhandled error in main:', error);
+  console.log(chalk.red('Unhandled error in main:'), error);
 });
