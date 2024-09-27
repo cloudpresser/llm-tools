@@ -56,17 +56,48 @@ async function retrieveRelevantInfo(gitDiff: string): Promise<string> {
   return "Relevant project guidelines and best practices...";
 }
 
+import readline from 'readline';
+
 async function generatePRDescription(gitDiff: string, template: string): Promise<string> {
   const summaryPrompt = `Generate a concise summary for a pull request based on the given git diff. Include the motivation and problem solved.`;
   const testPlanPrompt = `Generate a brief test plan for a pull request based on the given git diff. Include key test areas and any specific commands to run.`;
 
-  const summary = await generateWithAI(summaryPrompt, gitDiff);
-  const testPlan = await generateWithAI(testPlanPrompt, gitDiff);
+  let summary = await generateWithAI(summaryPrompt, gitDiff);
+  let testPlan = await generateWithAI(testPlanPrompt, gitDiff);
+
+  summary = await editSection('Summary', summary);
+  testPlan = await editSection('Test Plan', testPlan);
 
   return template
     .replace('<!-- Please provide enough information so that others can review your pull request. The three fields below are mandatory. -->', '')
     .replace('<!-- Explain the **motivation** for making this change. What existing problem does the pull request solve? -->', summary)
     .replace('<!-- Demonstrate the code is solid. Example: How to test the feature in storybook, screenshots / videos if the pull request changes the user interface. The exact commands you ran and their output (for code covered by unit tests) \nFor more details, see: https://gray-smoke-082026a10-docs.centralus.2.azurestaticapps.net/Pull-Request-Policy/PR-Review-Guidelines\n-->', testPlan);
+}
+
+async function editSection(sectionName: string, content: string): Promise<string> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  console.log(`\n${sectionName}:\n${content}\n`);
+  const answer = await new Promise<string>(resolve => {
+    rl.question(`Do you want to edit the ${sectionName} section? (y/n) `, resolve);
+  });
+
+  if (answer.toLowerCase() === 'y') {
+    console.log(`Please edit the ${sectionName} section. When you're done, type 'END' on a new line and press Enter:`);
+    let newContent = '';
+    while (true) {
+      const line = await new Promise<string>(resolve => rl.question('', resolve));
+      if (line.trim() === 'END') break;
+      newContent += line + '\n';
+    }
+    content = newContent.trim();
+  }
+
+  rl.close();
+  return content;
 }
 
 async function main() {
@@ -156,9 +187,25 @@ async function main() {
     console.log('Project:', argv.project || '');
     console.log('Repository ID:', argv.repositoryId || '');
     console.log('Title:', argv.title);
-    console.log('Description:', argv.description);
+    console.log('Description:');
+    console.log(argv.description);
     console.log('Work Items:', []); // Empty array as per your current implementation
-    console.log('Personal Access Token:', argv.personalAccessToken ? '[REDACTED]' : 'Not set');
+
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+
+    const confirm = await new Promise<string>(resolve => {
+      rl.question('Do you want to create this pull request? (y/n) ', resolve);
+    });
+
+    rl.close();
+
+    if (confirm.toLowerCase() !== 'y') {
+      console.log('Pull request creation cancelled.');
+      return;
+    }
 
     const pullRequestId = await createPullRequest({
       organization: argv.organization || '',
