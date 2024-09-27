@@ -8,6 +8,11 @@ import path from 'path';
 
 dotenv.config();
 
+// Initialize OpenAI API
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
 async function getCurrentBranch(): Promise<string> {
   const git = simpleGit();
   const branchSummary = await git.branch();
@@ -30,24 +35,30 @@ async function readPRTemplate(): Promise<string> {
 }
 
 async function generateWithAI(prompt: string, gitDiff: string): Promise<string> {
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  // Limit git diff size
+  const limitedGitDiff = gitDiff.length > 2000 ? gitDiff.substring(0, 2000) + "..." : gitDiff;
 
   const response = await openai.chat.completions.create({
     model: "gpt-4",
     messages: [
-      { role: "system", content: "You are a helpful assistant that generates pull request details based on git diffs." },
-      { role: "user", content: `${prompt}\n\nGit Diff:\n${gitDiff}` }
+      { role: "system", content: "You are an AI assistant helping with pull request reviews." },
+      { role: "user", content: `${prompt}\n\nGit Diff:\n${limitedGitDiff}` }
     ],
   });
 
   return response.choices[0].message?.content || '';
 }
 
+async function retrieveRelevantInfo(gitDiff: string): Promise<string> {
+  // Implement RAG logic here
+  // For example, you could search a documentation database or codebase for relevant information
+  // For now, we'll return a placeholder
+  return "Relevant project guidelines and best practices...";
+}
+
 async function generatePRDescription(gitDiff: string, template: string): Promise<string> {
-  const summaryPrompt = "Generate a summary for a pull request. Explain the motivation for making this change and what existing problem the pull request solves.";
-  const testPlanPrompt = "Generate a test plan for a pull request. Demonstrate how the code is solid, including examples of how to test the feature, any UI changes, and the exact commands to run for unit tests.";
+  const summaryPrompt = `Generate a concise summary for a pull request based on the given git diff. Include the motivation and problem solved.`;
+  const testPlanPrompt = `Generate a brief test plan for a pull request based on the given git diff. Include key test areas and any specific commands to run.`;
 
   const summary = await generateWithAI(summaryPrompt, gitDiff);
   const testPlan = await generateWithAI(testPlanPrompt, gitDiff);
