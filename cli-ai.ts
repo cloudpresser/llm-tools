@@ -6,6 +6,7 @@ import OpenAI from 'openai';
 import fs from 'fs/promises';
 import path from 'path';
 import readline from 'readline';
+import { execSync } from 'child_process';
 
 dotenv.config();
 
@@ -160,6 +161,47 @@ async function main() {
     console.log('Description:');
     console.log(argv.description);
     console.log('Work Items:', []); // Empty array as per your current implementation
+
+    // Function to check if a command is available
+    function isCommandAvailable(command: string): boolean {
+      try {
+        execSync(`which ${command}`, { stdio: 'ignore' });
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    // Function to open editor and get content
+    async function openEditor(initialContent: string, filePrefix: string): Promise<string> {
+      const tempFile = path.join(process.cwd(), `${filePrefix}_temp.md`);
+      await fs.writeFile(tempFile, initialContent);
+
+      const editor = ['nvim', 'nano', 'vim'].find(isCommandAvailable);
+      if (!editor) {
+        console.log('No suitable editor found. Skipping manual edit.');
+        return initialContent;
+      }
+
+      try {
+        execSync(`${editor} ${tempFile}`, { stdio: 'inherit' });
+        const editedContent = await fs.readFile(tempFile, 'utf-8');
+        await fs.unlink(tempFile);
+        return editedContent.trim();
+      } catch (error) {
+        console.error('Error while editing:', error);
+        return initialContent;
+      }
+    }
+
+    // Open editor for title
+    argv.title = await openEditor(argv.title, 'pr_title');
+    console.log('Updated Title:', argv.title);
+
+    // Open editor for description
+    argv.description = await openEditor(argv.description, 'pr_description');
+    console.log('Updated Description:');
+    console.log(argv.description);
 
     const rl = readline.createInterface({
       input: process.stdin,
