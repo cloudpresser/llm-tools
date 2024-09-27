@@ -3,6 +3,8 @@ import { createPullRequest } from './src/azureDevOpsClient';
 import dotenv from 'dotenv';
 import simpleGit from 'simple-git';
 import OpenAI from 'openai';
+import fs from 'fs/promises';
+import path from 'path';
 
 dotenv.config();
 
@@ -17,17 +19,33 @@ async function getGitDiff(): Promise<string> {
   return git.diff();
 }
 
-async function generateWithAI(prompt: string, gitDiff: string): Promise<string> {
+async function readPRTemplate(): Promise<string> {
+  try {
+    const templatePath = path.join(process.cwd(), 'prTemplate.md');
+    return await fs.readFile(templatePath, 'utf-8');
+  } catch (error) {
+    console.warn('Warning: Unable to read PR template. Using default template.');
+    return '## Summary:\n\n## Test Plan:\n\n## Review:';
+  }
+}
+
+async function generateWithAI(prompt: string, gitDiff: string, template?: string): Promise<string> {
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
 
+  const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+    { role: "system", content: "You are a helpful assistant that generates pull request details based on git diffs and follows the provided template structure." },
+    { role: "user", content: `${prompt}\n\nGit Diff:\n${gitDiff}` }
+  ];
+
+  if (template) {
+    messages.push({ role: "user", content: `Template:\n${template}` });
+  }
+
   const response = await openai.chat.completions.create({
     model: "gpt-4",
-    messages: [
-      { role: "system", content: "You are a helpful assistant that generates pull request details based on git diffs." },
-      { role: "user", content: `${prompt}\n\nGit Diff:\n${gitDiff}` }
-    ],
+    messages: messages,
   });
 
   return response.choices[0].message?.content || '';
@@ -109,7 +127,17 @@ async function main() {
     }
 
     if (!argv.description) {
-      argv.description = await generateWithAI("Generate a detailed pull request description based on the following git diff. Include a summary of changes and any important notes:", gitDiff);
+      const prTemplate = await readPRTemplate();
+      argv.description = await generateWithAI(
+        `Generate a detailed pull request description based on the following git diff. Use the provided template and fill in the sections appropriately. Include a summary of changes and any important notes:
+
+Template:
+${prTemplate}
+
+Git Diff:`,
+        gitDiff,
+        prTemplate
+      );
     }
 
     console.log('Pull Request Parameters:');
