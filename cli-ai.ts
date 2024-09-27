@@ -2,6 +2,7 @@ import yargs from 'yargs';
 import { createPullRequest } from './src/azureDevOpsClient';
 import dotenv from 'dotenv';
 import simpleGit from 'simple-git';
+import OpenAI from 'openai';
 
 dotenv.config();
 
@@ -11,12 +12,34 @@ async function getCurrentBranch(): Promise<string> {
   return branchSummary.current;
 }
 
+async function getGitDiff(): Promise<string> {
+  const git = simpleGit();
+  return git.diff();
+}
+
+async function generateWithAI(prompt: string, gitDiff: string): Promise<string> {
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4",
+    messages: [
+      { role: "system", content: "You are a helpful assistant that generates pull request details based on git diffs." },
+      { role: "user", content: `${prompt}\n\nGit Diff:\n${gitDiff}` }
+    ],
+  });
+
+  return response.choices[0].message?.content || '';
+}
+
 async function main() {
   console.log('Environment variables:');
   console.log('ORGANIZATION:', process.env.ORGANIZATION || 'Not set');
   console.log('PROJECT:', process.env.PROJECT || 'Not set');
   console.log('REPOSITORY_ID:', process.env.REPOSITORY_ID || 'Not set');
   console.log('PERSONAL_ACCESS_TOKEN:', process.env.PERSONAL_ACCESS_TOKEN ? '[REDACTED]' : 'Not set');
+  console.log('OPENAI_API_KEY:', process.env.OPENAI_API_KEY ? '[REDACTED]' : 'Not set');
 
   const argv = await yargs(process.argv.slice(2))
     .option('organization', {
@@ -37,17 +60,20 @@ async function main() {
     .option('title', {
       type: 'string',
       description: 'Pull request title',
-      demandOption: true,
     })
     .option('description', {
       type: 'string',
       description: 'Pull request description',
-      demandOption: true,
     })
     .option('personalAccessToken', {
       type: 'string',
       description: 'Azure DevOps personal access token',
       default: process.env.PERSONAL_ACCESS_TOKEN,
+    })
+    .option('openaiApiKey', {
+      type: 'string',
+      description: 'OpenAI API Key',
+      default: process.env.OPENAI_API_KEY,
     })
     .parse();
 
@@ -55,17 +81,36 @@ async function main() {
     throw new Error('Error: Personal Access Token is not set in the .env file or provided as an argument.');
   }
 
+  if (!process.env.OPENAI_API_KEY && !argv.openaiApiKey) {
+    throw new Error('Error: OpenAI API Key is not set in the .env file or provided as an argument.');
+  }
+
   console.log('Evaluated CLI arguments:');
   console.log('ORGANIZATION:', argv.organization || 'Not set');
   console.log('PROJECT:', argv.project || 'Not set');
   console.log('REPOSITORY_ID:', argv.repositoryId || 'Not set');
-  console.log('TITLE:', argv.title);
-  console.log('DESCRIPTION:', argv.description);
+  console.log('TITLE:', argv.title || 'Not set (will be generated)');
+  console.log('DESCRIPTION:', argv.description || 'Not set (will be generated)');
   console.log('PERSONAL_ACCESS_TOKEN:', argv.personalAccessToken ? '[REDACTED]' : 'Not set');
+  console.log('OPENAI_API_KEY:', argv.openaiApiKey ? '[REDACTED]' : 'Not set');
 
   try {
+    const gitDiff = await getGitDiff();
     const sourceBranch = await getCurrentBranch();
-    const targetBranch = 'main'; // Assuming 'main' is your default target branch
+    const defaultTargetBranch = 'main'; // Assuming 'main' is your default target branch
+    const targetBranch = sourceBranch === defaultTargetBranch ? 'develop' : defaultTargetBranch;
+
+    if (sourceBranch === targetBranch) {
+      throw new Error('Source and target branches cannot be the same. Please make sure you are not on the main branch.');
+    }
+
+    if (!argv.title) {
+      argv.title = await generateWithAI("Generate a concise and descriptive pull request title based on the following git diff:", gitDiff);
+    }
+
+    if (!argv.description) {
+      argv.description = await generateWithAI("Generate a detailed pull request description based on the following git diff. Include a summary of changes and any important notes:", gitDiff);
+    }
 
     console.log('Pull Request Parameters:');
     console.log('Source Branch:', sourceBranch);
@@ -121,7 +166,7 @@ async function main() {
     console.log('2. Ensure you have the necessary permissions in the Azure DevOps project.');
     console.log('3. Check your network connection and try again.');
     console.log('4. If the issue persists, try running the command with verbose logging:');
-    console.log('   DEBUG=axios npx ts-node cli.ts [your-options-here]');
+    console.log('   DEBUG=axios npx ts-node cli-ai.ts [your-options-here]');
   }
 }
 
