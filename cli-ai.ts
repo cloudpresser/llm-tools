@@ -29,26 +29,33 @@ async function readPRTemplate(): Promise<string> {
   }
 }
 
-async function generateWithAI(prompt: string, gitDiff: string, template?: string): Promise<string> {
+async function generateWithAI(prompt: string, gitDiff: string): Promise<string> {
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
 
-  const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-    { role: "system", content: "You are a helpful assistant that generates pull request details based on git diffs and follows the provided template structure." },
-    { role: "user", content: `${prompt}\n\nGit Diff:\n${gitDiff}` }
-  ];
-
-  if (template) {
-    messages.push({ role: "user", content: `Template:\n${template}` });
-  }
-
   const response = await openai.chat.completions.create({
     model: "gpt-4",
-    messages: messages,
+    messages: [
+      { role: "system", content: "You are a helpful assistant that generates pull request details based on git diffs." },
+      { role: "user", content: `${prompt}\n\nGit Diff:\n${gitDiff}` }
+    ],
   });
 
   return response.choices[0].message?.content || '';
+}
+
+async function generatePRDescription(gitDiff: string, template: string): Promise<string> {
+  const summaryPrompt = "Generate a summary for a pull request. Explain the motivation for making this change and what existing problem the pull request solves.";
+  const testPlanPrompt = "Generate a test plan for a pull request. Demonstrate how the code is solid, including examples of how to test the feature, any UI changes, and the exact commands to run for unit tests.";
+
+  const summary = await generateWithAI(summaryPrompt, gitDiff);
+  const testPlan = await generateWithAI(testPlanPrompt, gitDiff);
+
+  return template
+    .replace('<!-- Please provide enough information so that others can review your pull request. The three fields below are mandatory. -->', '')
+    .replace('<!-- Explain the **motivation** for making this change. What existing problem does the pull request solve? -->', summary)
+    .replace('<!-- Demonstrate the code is solid. Example: How to test the feature in storybook, screenshots / videos if the pull request changes the user interface. The exact commands you ran and their output (for code covered by unit tests) \nFor more details, see: https://gray-smoke-082026a10-docs.centralus.2.azurestaticapps.net/Pull-Request-Policy/PR-Review-Guidelines\n-->', testPlan);
 }
 
 async function main() {
@@ -128,16 +135,7 @@ async function main() {
 
     if (!argv.description) {
       const prTemplate = await readPRTemplate();
-      argv.description = await generateWithAI(
-        `Generate a detailed pull request description based on the following git diff. Use the provided template and fill in the sections appropriately. Include a summary of changes and any important notes:
-
-Template:
-${prTemplate}
-
-Git Diff:`,
-        gitDiff,
-        prTemplate
-      );
+      argv.description = await generatePRDescription(gitDiff, prTemplate);
     }
 
     console.log('Pull Request Parameters:');
