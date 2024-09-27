@@ -8,6 +8,7 @@ interface PullRequestParams {
   organization: string;
   project: string;
   repositoryId: string;
+  title: string;
   description: string;
   workItems: WorkItem[];
   targetBranch: string;
@@ -20,6 +21,7 @@ async function createPullRequest(params: PullRequestParams): Promise<number> {
     organization,
     project,
     repositoryId,
+    title,
     description,
     workItems,
     targetBranch,
@@ -35,7 +37,7 @@ async function createPullRequest(params: PullRequestParams): Promise<number> {
     const response = await axios.post(pullRequestUrl, {
       sourceRefName: `refs/heads/${sourceBranch}`,
       targetRefName: `refs/heads/${targetBranch}`,
-      title: `Merge ${sourceBranch} into ${targetBranch}`,
+      title: title,
       description: description,
       workItemRefs: workItems.map((item: WorkItem) => ({ id: item.id })),
     }, {
