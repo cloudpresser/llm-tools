@@ -1,6 +1,7 @@
 #!/usr/bin/env ts-node
 
 import yargs from 'yargs';
+import path from 'path';
 import { createPullRequest } from './src/azureDevOpsClient';
 import { createConfiguredTable } from './src/createConfiguredTable';
 import dotenv from 'dotenv';
@@ -121,7 +122,7 @@ async function main() {
     descriptionSpinner.succeed(neonPink('Pull request description generated.'));
   }
 
-  let pullRequestId = 'dry-run-id';
+  let pullRequestId: string | number = 'dry-run-id';
   if (argv.dryRun) {
     console.log(neonGreen('Dry run mode enabled. No pull request will be created.'));
   } else {
@@ -143,7 +144,7 @@ async function main() {
   }
 
   const prDetails: [string, string][] = [
-    ['Pull Request ID', pullRequestId],
+    ['Pull Request ID', pullRequestId.toString()],
     ['Title', argv.title],
     ['Source Branch', sourceBranch],
     ['Target Branch', targetBranch],

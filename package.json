@@ -12,7 +12,8 @@
     "test": "jest",
     "start": "npx tsx cli.ts",
     "start-ai": "npx tsx cli-ai.ts",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "check-types": "tsc --noEmit"
   },
   "keywords": [
     "azure",

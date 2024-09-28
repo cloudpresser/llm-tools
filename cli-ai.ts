@@ -1,4 +1,6 @@
 import readline from 'readline';
+import { execSync } from 'child_process';
+import fs from 'fs/promises';
 import path from 'path';
 import yargs from 'yargs';
 import chalk from 'chalk';
@@ -12,8 +14,21 @@ import { generateWithAI } from './src/generateWithAI';
 import { generatePRDescription } from './src/generatePRDescription';
 
 const neonGreen = chalk.hex('#39FF14');
+const neonOrange = chalk.hex('#FFA500');
 const neonBlue = chalk.hex('#00FFFF');
 const neonPink = chalk.hex('#FF00FF');
+
+interface Arguments {
+  organization?: string;
+  project?: string;
+  repositoryId?: string;
+  title?: string;
+  description?: string;
+  personalAccessToken?: string;
+  openaiApiKey?: string;
+  mock?: boolean;
+  dryRun?: boolean;
+}
 
 async function main(args: Arguments) {
   const rl = readline.createInterface({
@@ -21,7 +36,7 @@ async function main(args: Arguments) {
     output: process.stdout
   });
 
-  const cliArgs = await yargs(process.argv.slice(2))
+  const cliArgs = await yargs(process.argv.slice(2)).argv as Arguments;
 
   console.log(neonGreen('\nEnvironment Variables:'));
   const envVars: [string, string][] = [
@@ -34,23 +49,23 @@ async function main(args: Arguments) {
   ];
   console.log(createConfiguredTable(envVars));
 
-  if (!process.env.PERSONAL_ACCESS_TOKEN && !cliArgs.personalAccessToken) {
+  if (!process.env.PERSONAL_ACCESS_TOKEN && !args.personalAccessToken) {
     throw new Error('Error: Personal Access Token is not set in the .env file or provided as an argument.');
   }
 
-  if (!process.env.OPENAI_API_KEY && !cliArgs.openaiApiKey) {
+  if (!process.env.OPENAI_API_KEY && !args.openaiApiKey) {
     throw new Error('Error: OpenAI API Key is not set in the .env file or provided as an argument.');
   }
 
   console.log(neonGreen('\nEvaluated CLI Arguments:'));
   const parsedArgs: [string, string][] = [
-    ['ORGANIZATION', neonPink(cliArgs.organization || 'Not set')],
-    ['PROJECT', neonPink(cliArgs.project || 'Not set')],
-    ['REPOSITORY_ID', neonPink(cliArgs.repositoryId || 'Not set')],
-    ['TITLE', neonPink(cliArgs.title || 'Not set (will be generated)')],
-    ['DESCRIPTION', neonPink(cliArgs.description || 'Not set (will be generated)')],
-    ['PERSONAL_ACCESS_TOKEN', neonPink((cliArgs.personalAccessToken || 'Not set').substring(0, 10) + '...')],
-    ['OPENAI_API_KEY', neonPink((cliArgs.openaiApiKey || 'Not set').substring(0, 10) + '...')],
+    ['ORGANIZATION', neonPink(args.organization || 'Not set')],
+    ['PROJECT', neonPink(args.project || 'Not set')],
+    ['REPOSITORY_ID', neonPink(args.repositoryId || 'Not set')],
+    ['TITLE', neonPink(args.title || 'Not set (will be generated)')],
+    ['DESCRIPTION', neonPink(args.description || 'Not set (will be generated)')],
+    ['PERSONAL_ACCESS_TOKEN', neonPink((args.personalAccessToken || 'Not set').substring(0, 10) + '...')],
+    ['OPENAI_API_KEY', neonPink((args.openaiApiKey || 'Not set').substring(0, 10) + '...')],
   ];
 
   console.log(createConfiguredTable(parsedArgs));
@@ -80,7 +95,7 @@ async function main(args: Arguments) {
         spinner: 'dots',
         color: 'cyan'
       }).start();
-      cliArgs.title = args.mock
+      args.title = args.mock
         ? "Mock Pull Request Title"
         : await generateWithAI("Generate a concise and descriptive pull request title based on the following git diff:", gitDiff, args.mock as boolean);
       titleSpinner.succeed(neonPink('Pull request title generated.'));
@@ -93,7 +108,7 @@ async function main(args: Arguments) {
         color: 'cyan'
       }).start();
       const prTemplate = await readPRTemplate(path.dirname(__filename));
-      cliArgs.description = args.mock
+      args.description = args.mock
         ? "This is a mock description for the pull request."
         : await generatePRDescription(gitDiff, prTemplate, args.mock as boolean);
       descriptionSpinner.succeed(neonPink('Pull request description generated.'));
@@ -154,10 +169,10 @@ async function main(args: Arguments) {
 
     console.log(neonGreen('\nPull Request Details:'));
     const prDetailsEditTitle: [string, string][] = [
-      ['Title', neonPink(cliArgs.title)],
+      ['Title', neonPink(args.title)],
       ['Source Branch', neonPink(sourceBranch)],
       ['Target Branch', neonPink(targetBranch)],
-      ['Description', neonPink((cliArgs.description.length > 50 ? cliArgs.description.substring(0, 50) + '...' : cliArgs.description))],
+      ['Description', neonPink((args.description.length > 50 ? args.description.substring(0, 50) + '...' : args.description))],
     ];
 
     console.log(createConfiguredTable(prDetailsEditTitle));
@@ -165,16 +180,16 @@ async function main(args: Arguments) {
     // Ask if user wants to edit title
     const editTitle = await askToEdit('Do you want to edit the pull request title? (y/n) ');
     if (editTitle) {
-      cliArgs.title = await openEditor(cliArgs.title, 'pr_title');
+      args.title = await openEditor(args.title, 'pr_title');
     }
 
     console.log(neonGreen('\nUpdated Pull Request Details:'));
 
     const prDetailsEditDescription: [string, string][] = [
-      ['Title', neonPink(cliArgs.title)],
+      ['Title', neonPink(args.title)],
       ['Source Branch', neonPink(sourceBranch)],
       ['Target Branch', neonPink(targetBranch)],
-      ['Description', neonPink((cliArgs.description))],
+      ['Description', neonPink((args.description))],
     ];
 
     console.log(createConfiguredTable(prDetailsEditDescription));
@@ -182,7 +197,7 @@ async function main(args: Arguments) {
     // Ask if user wants to edit description
     const editDescription = await askToEdit('Do you want to edit the pull request description? (y/n) ');
     if (editDescription) {
-      cliArgs.description = await openEditor(cliArgs.description, 'pr_description');
+      args.description = await openEditor(args.description, 'pr_description');
     }
 
 
@@ -201,19 +216,19 @@ async function main(args: Arguments) {
       console.log(neonGreen('Creating pull request...'));
 
       pullRequestId = await createPullRequest({
-        organization: cliArgs.organization as string || '',
-        project: cliArgs.project as string || '',
-        repositoryId: cliArgs.repositoryId as string || '',
-        title: cliArgs.title as string,
-        description: cliArgs.description as string,
+        organization: args.organization as string || '',
+        project: args.project as string || '',
+        repositoryId: args.repositoryId as string || '',
+        title: args.title as string,
+        description: args.description as string,
         workItems: [],
         targetBranch: targetBranch,
         sourceBranch: sourceBranch,
-        personalAccessToken: cliArgs.personalAccessToken as string || '',
-      });
+        personalAccessToken: args.personalAccessToken as string || '',
+      }) as unknown as string;
       spinner.start('Creating pull request...');
 
-      if (!cliArgs.organization || !cliArgs.project || !cliArgs.repositoryId) {
+      if (!args.organization || !args.project || !args.repositoryId) {
         console.warn('Warning: Some required parameters were not provided. Check your .env file or command-line arguments.');
       }
 
@@ -226,7 +241,7 @@ async function main(args: Arguments) {
       ['Target Branch', neonPink(targetBranch)],
       ['Description', neonPink(cliArgs.description)],
       ['Pull Request ID', neonPink(pullRequestId.toString())],
-      ['View PR', args.dryRun ? neonBlue('Dry Run - No URL') : neonBlue(`https://dev.azure.com/${cliArgs.organization}/${cliArgs.project}/_git/${cliArgs.repositoryId}/pullrequest/${pullRequestId}`)],
+      ['View PR', args.dryRun ? neonBlue('Dry Run - No URL') : neonBlue(`https://dev.azure.com/${args.organization}/${args.project}/_git/${args.repositoryId}/pullrequest/${pullRequestId}`)],
     ];
     console.log(neonGreen('\nPull Request Created Successfully:'));
     console.log(createConfiguredTable(finalPrDetails));

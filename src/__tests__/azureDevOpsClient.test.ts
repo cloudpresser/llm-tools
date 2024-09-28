@@ -16,6 +16,7 @@ describe('createPullRequest', () => {
       organization: 'testorg',
       project: 'testproject',
       repositoryId: 'testrepo',
+      title: 'Test PR',
       description: 'Test PR',
       workItems: [{ id: 1 }, { id: 2 }],
       targetBranch: 'main',
@@ -43,6 +44,7 @@ describe('createPullRequest', () => {
     await expect(createPullRequest({
       organization: 'testorg',
       project: 'testproject',
+      title: 'test',
       repositoryId: 'testrepo',
       description: 'Test PR',
       workItems: [],

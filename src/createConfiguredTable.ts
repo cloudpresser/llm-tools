@@ -1,5 +1,6 @@
 import chalk from 'chalk';
-import { createTable, TableUserConfig } from './tableUtils';
+import { createTable } from './tableUtils';
+import { TableUserConfig } from 'table';
 
 const neonBlue = chalk.hex('#00FFFF');
 
@@ -31,5 +32,5 @@ export function createConfiguredTable(data: [string, string][]): string {
     },
   };
 
-  return createTable(data, config);
+  return createTable(data);
 }
