@@ -4,6 +4,9 @@
   "description": "A TypeScript library to create pull requests in Azure DevOps",
   "main": "dist/azureDevOpsClient.js",
   "types": "dist/azureDevOpsClient.d.ts",
+  "bin": {
+    "start-ai": "./bin/start-ai"
+  },
   "scripts": {
     "build": "tsc",
     "test": "jest",
