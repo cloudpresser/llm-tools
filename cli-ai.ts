@@ -41,7 +41,7 @@ async function getGitDiff(): Promise<string> {
   return git.diff();
 }
 
-async function readPRTemplate(): Promise<string> {
+async function readPRTemplate(cliPath: string): Promise<string> {
   const spinner = ora({
     text: neonBlue('Reading PR template...'),
     spinner: 'dots',
@@ -49,7 +49,7 @@ async function readPRTemplate(): Promise<string> {
   }).start();
 
   try {
-    const templatePath = path.join(process.cwd(), 'prTemplate.md');
+    const templatePath = path.join(cliPath, 'prTemplate.md');
     const template = await fs.readFile(templatePath, 'utf-8');
     spinner.succeed(neonPink('PR template read successfully.'));
     return template;
@@ -225,7 +225,7 @@ async function main(args: Arguments) {
         spinner: 'dots',
         color: 'cyan'
       }).start();
-      const prTemplate = await readPRTemplate();
+      const prTemplate = await readPRTemplate(path.dirname(__filename));
       cliArgs.description = args.mock
         ? "This is a mock description for the pull request."
         : await generatePRDescription(gitDiff, prTemplate, args.mock as boolean);
