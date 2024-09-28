@@ -3,6 +3,7 @@
 import yargs from 'yargs';
 import { createPullRequest } from './src/azureDevOpsClient';
 import dotenv from 'dotenv';
+import ora from 'ora';
 import chalk from 'chalk';
 import { getCurrentBranch } from './src/getCurrentBranch';
 import { getGitDiff } from './src/getGitDiff';
@@ -49,6 +50,11 @@ async function main() {
       type: 'string',
       description: 'Azure DevOps personal access token',
       default: process.env.PERSONAL_ACCESS_TOKEN,
+    })
+    .option('dryRun', {
+      type: 'boolean',
+      description: 'Run the script in dry-run mode (no actual request to Azure DevOps)',
+      default: false,
     })
     .parse();
 
@@ -103,23 +109,32 @@ async function main() {
     descriptionSpinner.succeed(chalk.green('Pull request description generated.'));
   }
 
-  const pullRequestId = await createPullRequest({
-    organization: argv.organization || '',
-    project: argv.project || '',
-    repositoryId: argv.repositoryId || '',
-    title: argv.title,
-    description: argv.description,
-    workItems: [],
-    targetBranch: targetBranch,
-    sourceBranch: sourceBranch,
-    personalAccessToken: argv.personalAccessToken || '',
-  });
+  let pullRequestId = 'dry-run-id';
+  if (argv.dryRun) {
+    console.log(chalk.yellow('Dry-run mode enabled. No actual request to Azure DevOps will be made.'));
+  } else {
+    pullRequestId = await createPullRequest({
+      organization: argv.organization || '',
+      project: argv.project || '',
+      repositoryId: argv.repositoryId || '',
+      title: argv.title,
+      description: argv.description,
+      workItems: [],
+      targetBranch: targetBranch,
+      sourceBranch: sourceBranch,
+      personalAccessToken: argv.personalAccessToken || '',
+    });
+  }
 
   if (!argv.organization || !argv.project || !argv.repositoryId) {
     console.warn('Warning: Some required parameters were not provided. Check your .env file or command-line arguments.');
   }
 
-  console.log(chalk.blue('Pull request created successfully:'));
+  if (argv.dryRun) {
+    console.log(chalk.blue('Dry-run mode: Pull request details:'));
+  } else {
+    console.log(chalk.blue('Pull request created successfully:'));
+  }
   console.log(chalk.green(`Pull Request ID: ${pullRequestId}`));
   console.log(chalk.green(`Title: ${argv.title}`));
   console.log(chalk.green(`Source Branch: ${sourceBranch}`));
