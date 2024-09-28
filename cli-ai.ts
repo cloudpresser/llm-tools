@@ -79,6 +79,11 @@ async function generatePRDescription(gitDiff: string, template: string): Promise
     .replace('<!-- Demonstrate the code is solid. Example: How to test the feature in storybook, screenshots / videos if the pull request changes the user interface. The exact commands you ran and their output (for code covered by unit tests) \nFor more details, see: https://gray-smoke-082026a10-docs.centralus.2.azurestaticapps.net/Pull-Request-Policy/PR-Review-Guidelines\n-->', testPlan);
 }
 
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
 async function main() {
   const config = {
     columns: {
@@ -201,6 +206,7 @@ async function main() {
       descriptionSpinner.succeed('Pull request description generated.');
     }
 
+
     // Function to check if a command is available
     function isCommandAvailable(command: string): boolean {
       try {
@@ -237,17 +243,34 @@ async function main() {
       }
     }
 
-    // Open editor for title
-    argv.title = await openEditor(argv.title, 'pr_title');
-
-    // Open editor for description
-    argv.description = await openEditor(argv.description, 'pr_description');
-
 
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout
     });
+
+    // Function to ask user if they want to edit
+    async function askToEdit(prompt: string): Promise<boolean> {
+      return new Promise((resolve) => {
+        rl.question(prompt, (answer) => {
+          resolve(answer.toLowerCase() === 'y');
+        });
+      });
+    }
+
+    // Ask if user wants to edit title
+    const editTitle = await askToEdit('Do you want to edit the pull request title? (y/n) ');
+    if (editTitle) {
+      argv.title = await openEditor(argv.title, 'pr_title');
+    }
+
+    // Ask if user wants to edit description
+    const editDescription = await askToEdit('Do you want to edit the pull request description? (y/n) ');
+    if (editDescription) {
+      argv.description = await openEditor(argv.description, 'pr_description');
+    }
+
+
 
     const prDetails: [string, string][] = [
       ['Title', chalk.magenta(argv.title)],
@@ -263,7 +286,6 @@ async function main() {
       rl.question('Do you want to create this pull request? (y/n) ', resolve);
     });
 
-    rl.close();
 
     if (confirm.toLowerCase() !== 'y') {
       console.log('Pull request creation cancelled.');
@@ -306,6 +328,7 @@ async function main() {
 
     console.log(chalk.green('\nPull Request Created Successfully:'));
     console.log(table(finalPrDetails, config));
+    rl.close();
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.log(chalk.red('Error creating pull request:'), error.message);
