@@ -12,6 +12,14 @@ import ora from 'ora';
 import columnify from 'columnify';
 import { table } from 'table';
 
+// Custom neon colors
+const neonBlue = chalk.hex('#00FFFF');
+const neonPink = chalk.hex('#FF00FF');
+const neonPurple = chalk.hex('#800080');
+const neonYellow = chalk.hex('#FFFF00');
+const neonOrange = chalk.hex('#FFA500');
+const neonGreen = chalk.hex('#39FF14');
+
 dotenv.config();
 
 // Initialize OpenAI API
@@ -31,15 +39,19 @@ async function getGitDiff(): Promise<string> {
 }
 
 async function readPRTemplate(): Promise<string> {
-  const spinner = ora('Reading PR template...').start();
+  const spinner = ora({
+    text: neonBlue('Reading PR template...'),
+    spinner: 'dots',
+    color: 'cyan'
+  }).start();
 
   try {
     const templatePath = path.join(process.cwd(), 'prTemplate.md');
     const template = await fs.readFile(templatePath, 'utf-8');
-    spinner.succeed('PR template read successfully.');
+    spinner.succeed(neonPink('PR template read successfully.'));
     return template;
   } catch (error) {
-    spinner.fail('Unable to read PR template. Using default template.');
+    spinner.fail(neonOrange('Unable to read PR template. Using default template.'));
     return '## Summary:\n\n## Test Plan:\n\n## Review:';
   }
 }
@@ -94,31 +106,31 @@ async function main() {
       wrapWord: true,
     },
     border: {
-      topBody: chalk.cyan('─'),
-      topJoin: chalk.cyan('┬'),
-      topLeft: chalk.cyan('┌'),
-      topRight: chalk.cyan('┐'),
-      bottomBody: chalk.cyan('─'),
-      bottomJoin: chalk.cyan('┴'),
-      bottomLeft: chalk.cyan('└'),
-      bottomRight: chalk.cyan('┘'),
-      bodyLeft: chalk.cyan('│'),
-      bodyRight: chalk.cyan('│'),
-      bodyJoin: chalk.cyan('│'),
-      joinBody: chalk.cyan('─'),
-      joinLeft: chalk.cyan('├'),
-      joinRight: chalk.cyan('┤'),
-      joinJoin: chalk.cyan('┼'),
+      topBody: neonBlue('─'),
+      topJoin: neonBlue('┬'),
+      topLeft: neonBlue('┌'),
+      topRight: neonBlue('┐'),
+      bottomBody: neonBlue('─'),
+      bottomJoin: neonBlue('┴'),
+      bottomLeft: neonBlue('└'),
+      bottomRight: neonBlue('┘'),
+      bodyLeft: neonBlue('│'),
+      bodyRight: neonBlue('│'),
+      bodyJoin: neonBlue('│'),
+      joinBody: neonBlue('─'),
+      joinLeft: neonBlue('├'),
+      joinRight: neonBlue('┤'),
+      joinJoin: neonBlue('┼'),
     },
   };
 
-  console.log(chalk.blue('\nEnvironment Variables:'));
+  console.log(neonGreen('\nEnvironment Variables:'));
   const envVars: [string, string][] = [
-    ['ORGANIZATION', chalk.magenta(process.env.ORGANIZATION || 'Not set')],
-    ['PROJECT', chalk.magenta(process.env.PROJECT || 'Not set')],
-    ['REPOSITORY_ID', chalk.magenta(process.env.REPOSITORY_ID || 'Not set')],
-    ['PERSONAL_ACCESS_TOKEN', chalk.magenta(process.env.PERSONAL_ACCESS_TOKEN ? '[REDACTED]' : 'Not set')],
-    ['OPENAI_API_KEY', chalk.magenta(process.env.OPENAI_API_KEY ? '[REDACTED]' : 'Not set')],
+    ['ORGANIZATION', neonPink(process.env.ORGANIZATION || 'Not set')],
+    ['PROJECT', neonPink(process.env.PROJECT || 'Not set')],
+    ['REPOSITORY_ID', neonPink(process.env.REPOSITORY_ID || 'Not set')],
+    ['PERSONAL_ACCESS_TOKEN', neonPink(process.env.PERSONAL_ACCESS_TOKEN ? '[REDACTED]' : 'Not set')],
+    ['OPENAI_API_KEY', neonPink(process.env.OPENAI_API_KEY ? '[REDACTED]' : 'Not set')],
   ];
   console.log(table(envVars, config));
 
@@ -166,26 +178,30 @@ async function main() {
     throw new Error('Error: OpenAI API Key is not set in the .env file or provided as an argument.');
   }
 
-  console.log(chalk.blue('\nEvaluated CLI Arguments:'));
+  console.log(neonGreen('\nEvaluated CLI Arguments:'));
   const cliArgs: [string, string][] = [
-    ['ORGANIZATION', chalk.magenta(argv.organization || 'Not set')],
-    ['PROJECT', chalk.magenta(argv.project || 'Not set')],
-    ['REPOSITORY_ID', chalk.magenta(argv.repositoryId || 'Not set')],
-    ['TITLE', chalk.magenta(argv.title || 'Not set (will be generated)')],
-    ['DESCRIPTION', chalk.magenta(argv.description || 'Not set (will be generated)')],
-    ['PERSONAL_ACCESS_TOKEN', chalk.magenta(argv.personalAccessToken ? '[REDACTED]' : 'Not set')],
-    ['OPENAI_API_KEY', chalk.magenta(argv.openaiApiKey ? '[REDACTED]' : 'Not set')],
+    ['ORGANIZATION', neonPink(argv.organization || 'Not set')],
+    ['PROJECT', neonPink(argv.project || 'Not set')],
+    ['REPOSITORY_ID', neonPink(argv.repositoryId || 'Not set')],
+    ['TITLE', neonPink(argv.title || 'Not set (will be generated)')],
+    ['DESCRIPTION', neonPink(argv.description || 'Not set (will be generated)')],
+    ['PERSONAL_ACCESS_TOKEN', neonPink(argv.personalAccessToken ? '[REDACTED]' : 'Not set')],
+    ['OPENAI_API_KEY', neonPink(argv.openaiApiKey ? '[REDACTED]' : 'Not set')],
   ];
   console.log(table(cliArgs, config));
 
   try {
-    const spinner = ora('Fetching git diff...').start();
+    const spinner = ora({
+      text: neonBlue('Fetching git diff...'),
+      spinner: 'dots',
+      color: 'cyan'
+    }).start();
     const gitDiff = await getGitDiff();
-    spinner.succeed('Git diff fetched.');
+    spinner.succeed(neonPink('Git diff fetched.'));
 
-    spinner.start('Getting current branch...');
+    spinner.start(neonBlue('Getting current branch...'));
     const sourceBranch = await getCurrentBranch();
-    spinner.succeed('Current branch obtained.');
+    spinner.succeed(neonPink('Current branch obtained.'));
     const defaultTargetBranch = 'main'; // Assuming 'main' is your default target branch
     const targetBranch = sourceBranch === defaultTargetBranch ? 'develop' : defaultTargetBranch;
 
@@ -194,16 +210,24 @@ async function main() {
     }
 
     if (!argv.title) {
-      const titleSpinner = ora('Generating pull request title...').start();
+      const titleSpinner = ora({
+        text: neonBlue('Generating pull request title...'),
+        spinner: 'dots',
+        color: 'cyan'
+      }).start();
       argv.title = await generateWithAI("Generate a concise and descriptive pull request title based on the following git diff:", gitDiff);
-      titleSpinner.succeed('Pull request title generated.');
+      titleSpinner.succeed(neonPink('Pull request title generated.'));
     }
 
     if (!argv.description) {
-      const descriptionSpinner = ora('Generating pull request description...').start();
+      const descriptionSpinner = ora({
+        text: neonBlue('Generating pull request description...'),
+        spinner: 'dots',
+        color: 'cyan'
+      }).start();
       const prTemplate = await readPRTemplate();
       argv.description = await generatePRDescription(gitDiff, prTemplate);
-      descriptionSpinner.succeed('Pull request description generated.');
+      descriptionSpinner.succeed(neonPink('Pull request description generated.'));
     }
 
 
@@ -225,8 +249,8 @@ async function main() {
 
       const editor = ['nvim', 'nano', 'vim'].find(isCommandAvailable);
       if (!editor) {
-        console.log('No suitable editor found. Skipping manual edit.');
-        spinner.fail('Error while editing.');
+        console.log(neonOrange('No suitable editor found. Skipping manual edit.'));
+        spinner.fail(neonOrange('Error while editing.'));
         return initialContent;
       }
 
@@ -238,7 +262,7 @@ async function main() {
         spinner.succeed('Editor closed.');
         return result;
       } catch (error) {
-        console.error('Error while editing:', error);
+        console.error(neonOrange('Error while editing:'), error);
         return initialContent;
       }
     }
@@ -257,6 +281,15 @@ async function main() {
         });
       });
     }
+    const prDetailsEditTitle: [string, string][] = [
+      ['Title', neonPink(argv.title)],
+      ['Source Branch', neonPink(sourceBranch)],
+      ['Target Branch', neonPink(targetBranch)],
+      ['Description', neonPink((argv.description.length > 50 ? argv.description + '...' : ''))],
+    ];
+
+    console.log(neonGreen('\nPull Request Details:'));
+    console.log(table(prDetailsEditTitle, config));
 
     // Ask if user wants to edit title
     const editTitle = await askToEdit('Do you want to edit the pull request title? (y/n) ');
@@ -264,6 +297,17 @@ async function main() {
       argv.title = await openEditor(argv.title, 'pr_title');
     }
 
+
+    console.log(neonGreen('\nPull Request Details:'));
+
+        const prDetailsEditDescription: [string, string][] = [
+      ['Title', neonPink(argv.title)],
+      ['Source Branch', neonPink(sourceBranch)],
+      ['Target Branch', neonPink(targetBranch)],
+      ['Description', neonPink(argv.description)],
+    ];
+
+    console.log(table(prDetailsEditDescription, config));
     // Ask if user wants to edit description
     const editDescription = await askToEdit('Do you want to edit the pull request description? (y/n) ');
     if (editDescription) {
@@ -272,27 +316,18 @@ async function main() {
 
 
 
-    const prDetails: [string, string][] = [
-      ['Title', chalk.magenta(argv.title)],
-      ['Source Branch', chalk.magenta(sourceBranch)],
-      ['Target Branch', chalk.magenta(targetBranch)],
-      ['Description', chalk.magenta(argv.description + (argv.description.length > 50 ? '...' : ''))],
-    ];
-
-    console.log(chalk.cyan('\nPull Request Details:'));
-    console.log(table(prDetails, config));
 
     const confirm = await new Promise<string>(resolve => {
-      rl.question('Do you want to create this pull request? (y/n) ', resolve);
+      rl.question(neonGreen('Do you want to create this pull request? (y/n) '), resolve);
     });
 
 
     if (confirm.toLowerCase() !== 'y') {
-      console.log('Pull request creation cancelled.');
+      console.log(neonGreen('Pull request creation cancelled.'));
       return;
     }
 
-    console.log(chalk.blue('Creating pull request...'));
+    console.log(neonGreen('Creating pull request...'));
 
 
     const pullRequestId = await createPullRequest({
@@ -312,47 +347,47 @@ async function main() {
       console.warn('Warning: Some required parameters were not provided. Check your .env file or command-line arguments.');
     }
 
-    spinner.succeed('Pull request created successfully.');
+    spinner.succeed(neonPink('Pull request created successfully.'));
 
-    console.log(chalk.green('Pull request created successfully:'));
+    console.log(neonGreen('Pull request created successfully:'));
     
 
     const finalPrDetails: [string, string][] = [
-      ['Title', chalk.magenta(argv.title)],
-      ['Source Branch', chalk.magenta(sourceBranch)],
-      ['Target Branch', chalk.magenta(targetBranch)],
-      ['Description', chalk.magenta(argv.description.slice(0, 50) + (argv.description.length > 50 ? '...' : ''))],
-      ['Pull Request ID', chalk.magenta(pullRequestId.toString())],
-      ['View PR', chalk.cyan(`https://dev.azure.com/${argv.organization}/${argv.project}/_git/${argv.repositoryId}/pullrequest/${pullRequestId}`)],
+      ['Title', neonPink(argv.title)],
+      ['Source Branch', neonPink(sourceBranch)],
+      ['Target Branch', neonPink(targetBranch)],
+      ['Description', neonPink(argv.description.slice(0, 50) + (argv.description.length > 50 ? '...' : ''))],
+      ['Pull Request ID', neonPink(pullRequestId.toString())],
+      ['View PR', neonBlue(`https://dev.azure.com/${argv.organization}/${argv.project}/_git/${argv.repositoryId}/pullrequest/${pullRequestId}`)],
     ];
 
-    console.log(chalk.green('\nPull Request Created Successfully:'));
+    console.log(neonGreen('\nPull Request Created Successfully:'));
     console.log(table(finalPrDetails, config));
     rl.close();
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.log(chalk.red('Error creating pull request:'), error.message);
+      console.log(neonGreen('Error creating pull request:'), error.message);
       if (error.message.includes('Authentication failed')) {
         console.log('\nAuthentication Error Details:');
-        console.log('1. Ensure your Personal Access Token is valid and has not expired.');
-        console.log('2. Verify that your Personal Access Token has the necessary scopes:');
-        console.log('   - Code (Read & Write)');
-        console.log('   - Pull Request Contribute');
-        console.log('3. Check if you can access the Azure DevOps web interface for this project.');
-        console.log('4. Try generating a new Personal Access Token and update the .env file.');
+        console.log(neonGreen('1. Ensure your Personal Access Token is valid and has not expired.'));
+        console.log(neonGreen('2. Verify that your Personal Access Token has the necessary scopes:'));
+        console.log(neonGreen('   - Code (Read & Write)'));
+        console.log(neonGreen('   - Pull Request Contribute'));
+        console.log(neonGreen('3. Check if you can access the Azure DevOps web interface for this project.'));
+        console.log(neonGreen('4. Try generating a new Personal Access Token and update the .env file.'));
       }
     } else {
-      console.log(chalk.red('An unknown error occurred:'), error);
+      console.log(neonGreen('An unknown error occurred:'), error);
     }
-    console.log(chalk.yellow('\nTroubleshooting steps:'));
-    console.log(chalk.yellow('1. Double-check the organization, project, and repository details in your .env file.'));
-    console.log(chalk.yellow('2. Ensure you have the necessary permissions in the Azure DevOps project.'));
-    console.log(chalk.yellow('3. Check your network connection and try again.'));
-    console.log(chalk.yellow('4. If the issue persists, try running the command with verbose logging:'));
-    console.log(chalk.yellow('   DEBUG=axios npx ts-node cli-ai.ts [your-options-here]'));
+    console.log(neonGreen('\nTroubleshooting steps:'));
+    console.log(neonGreen('1. Double-check the organization, project, and repository details in your .env file.'));
+    console.log(neonGreen('2. Ensure you have the necessary permissions in the Azure DevOps project.'));
+    console.log(neonGreen('3. Check your network connection and try again.'));
+    console.log(neonGreen('4. If the issue persists, try running the command with verbose logging:'));
+    console.log(neonGreen('   DEBUG=axios npx ts-node cli-ai.ts [your-options-here]'));
   }
 }
 
 main().catch((error) => {
-  console.log(chalk.red('Unhandled error in main:'), error);
+  console.log(neonGreen('Unhandled error in main:'), error);
 });
