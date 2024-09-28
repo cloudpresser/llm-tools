@@ -2,6 +2,7 @@
 
 import yargs from 'yargs';
 import { createPullRequest } from './src/azureDevOpsClient';
+import { createConfiguredTable } from './src/createConfiguredTable';
 import dotenv from 'dotenv';
 import ora from 'ora';
 import chalk from 'chalk';
@@ -15,10 +16,13 @@ dotenv.config();
 
 async function main() {
   console.log(chalk.blue('Environment variables:'));
-  console.log(chalk.green('ORGANIZATION:'), process.env.ORGANIZATION || 'Not set');
-  console.log(chalk.green('PROJECT:'), process.env.PROJECT || 'Not set');
-  console.log(chalk.green('REPOSITORY_ID:'), process.env.REPOSITORY_ID || 'Not set');
-  console.log(chalk.green('PERSONAL_ACCESS_TOKEN:'), process.env.PERSONAL_ACCESS_TOKEN ? '[REDACTED]' : 'Not set');
+  const envVars: [string, string][] = [
+    ['ORGANIZATION', process.env.ORGANIZATION || 'Not set'],
+    ['PROJECT', process.env.PROJECT || 'Not set'],
+    ['REPOSITORY_ID', process.env.REPOSITORY_ID || 'Not set'],
+    ['PERSONAL_ACCESS_TOKEN', process.env.PERSONAL_ACCESS_TOKEN ? '[REDACTED]' : 'Not set'],
+  ];
+  console.log(createConfiguredTable(envVars));
 
   const argv = await yargs(process.argv.slice(2))
     .option('organization', {
@@ -63,12 +67,16 @@ async function main() {
   }
 
   console.log(chalk.blue('Evaluated CLI arguments:'));
-  console.log(chalk.green('ORGANIZATION:'), argv.organization || 'Not set');
-  console.log(chalk.green('PROJECT:'), argv.project || 'Not set');
-  console.log(chalk.green('REPOSITORY_ID:'), argv.repositoryId || 'Not set');
-  console.log(chalk.green('TITLE:'), argv.title);
-  console.log(chalk.green('DESCRIPTION:'), argv.description);
-  console.log(chalk.green('PERSONAL_ACCESS_TOKEN:'), argv.personalAccessToken ? '[REDACTED]' : 'Not set');
+  const cliArgs: [string, string][] = [
+    ['ORGANIZATION', argv.organization || 'Not set'],
+    ['PROJECT', argv.project || 'Not set'],
+    ['REPOSITORY_ID', argv.repositoryId || 'Not set'],
+    ['TITLE', argv.title],
+    ['DESCRIPTION', argv.description],
+    ['PERSONAL_ACCESS_TOKEN', argv.personalAccessToken ? '[REDACTED]' : 'Not set'],
+  ];
+  console.log(createConfiguredTable(cliArgs));
+
 
   const spinner = ora({
     text: chalk.blue('Fetching git diff...'),
@@ -130,17 +138,21 @@ async function main() {
     console.warn('Warning: Some required parameters were not provided. Check your .env file or command-line arguments.');
   }
 
+  const prDetails: [string, string][] = [
+    ['Pull Request ID', pullRequestId],
+    ['Title', argv.title],
+    ['Source Branch', sourceBranch],
+    ['Target Branch', targetBranch],
+    ['Description', argv.description],
+    ['View PR', `https://dev.azure.com/${argv.organization}/${argv.project}/_git/${argv.repositoryId}/pullrequest/${pullRequestId}`],
+  ];
+
   if (argv.dryRun) {
     console.log(chalk.blue('Dry-run mode: Pull request details:'));
   } else {
     console.log(chalk.blue('Pull request created successfully:'));
   }
-  console.log(chalk.green(`Pull Request ID: ${pullRequestId}`));
-  console.log(chalk.green(`Title: ${argv.title}`));
-  console.log(chalk.green(`Source Branch: ${sourceBranch}`));
-  console.log(chalk.green(`Target Branch: ${targetBranch}`));
-  console.log(chalk.green(`Description: ${argv.description}`));
-  console.log(chalk.green(`View PR: https://dev.azure.com/${argv.organization}/${argv.project}/_git/${argv.repositoryId}/pullrequest/${pullRequestId}`));
+  console.log(createConfiguredTable(prDetails));
 }
 
 main().catch((error) => {

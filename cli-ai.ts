@@ -2,7 +2,7 @@ import readline from 'readline';
 import path from 'path';
 import yargs from 'yargs';
 import chalk from 'chalk';
-import { table } from 'table';
+import { createConfiguredTable } from './src/createConfiguredTable';
 import ora from 'ora';
 import { createPullRequest } from './src/azureDevOpsClient';
 import { getCurrentBranch } from './src/getCurrentBranch';
@@ -60,7 +60,7 @@ async function main(args: Arguments) {
     ['OPENAI_API_KEY', neonPink((process.env.OPENAI_API_KEY || 'Not set').substring(0, 10) + '...')],
     
   ];
-  console.log(table(envVars, config));
+  console.log(createConfiguredTable(envVars));
 
   if (!process.env.PERSONAL_ACCESS_TOKEN && !cliArgs.personalAccessToken) {
     throw new Error('Error: Personal Access Token is not set in the .env file or provided as an argument.');
@@ -81,7 +81,7 @@ async function main(args: Arguments) {
     ['OPENAI_API_KEY', neonPink((cliArgs.openaiApiKey || 'Not set').substring(0, 10) + '...')],
   ];
 
-  console.log(table(parsedArgs, config));
+  console.log(createConfiguredTable(parsedArgs));
 
   try {
     const spinner = ora({
@@ -188,7 +188,7 @@ async function main(args: Arguments) {
       ['Description', neonPink((cliArgs.description.length > 50 ? cliArgs.description.substring(0, 50) + '...' : cliArgs.description))],
     ];
 
-    console.log(table(prDetailsEditTitle, config));
+    console.log(createConfiguredTable(prDetailsEditTitle));
 
     // Ask if user wants to edit title
     const editTitle = await askToEdit('Do you want to edit the pull request title? (y/n) ');
@@ -205,7 +205,7 @@ async function main(args: Arguments) {
       ['Description', neonPink((cliArgs.description))],
     ];
 
-    console.log(table(prDetailsEditDescription, config));
+    console.log(createConfiguredTable(prDetailsEditDescription));
     
     // Ask if user wants to edit description
     const editDescription = await askToEdit('Do you want to edit the pull request description? (y/n) ');
@@ -257,7 +257,7 @@ async function main(args: Arguments) {
       ['View PR', args.dryRun ? neonBlue('Dry Run - No URL') : neonBlue(`https://dev.azure.com/${cliArgs.organization}/${cliArgs.project}/_git/${cliArgs.repositoryId}/pullrequest/${pullRequestId}`)],
     ];
     console.log(neonGreen('\nPull Request Created Successfully:'));
-    console.log(table(finalPrDetails, config));
+    console.log(createConfiguredTable(finalPrDetails));
     rl.close();
   } catch (error: unknown) {
     if (error instanceof Error) {
