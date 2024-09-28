@@ -108,12 +108,12 @@ async function main() {
   };
 
   console.log(chalk.blue('\nEnvironment Variables:'));
-  const envVars = [
-    ['ORGANIZATION', process.env.ORGANIZATION || 'Not set'],
-    ['PROJECT', process.env.PROJECT || 'Not set'],
-    ['REPOSITORY_ID', process.env.REPOSITORY_ID || 'Not set'],
-    ['PERSONAL_ACCESS_TOKEN', process.env.PERSONAL_ACCESS_TOKEN ? '[REDACTED]' : 'Not set'],
-    ['OPENAI_API_KEY', process.env.OPENAI_API_KEY ? '[REDACTED]' : 'Not set'],
+  const envVars: [string, string][] = [
+    ['ORGANIZATION', chalk.green(process.env.ORGANIZATION || 'Not set')],
+    ['PROJECT', chalk.green(process.env.PROJECT || 'Not set')],
+    ['REPOSITORY_ID', chalk.green(process.env.REPOSITORY_ID || 'Not set')],
+    ['PERSONAL_ACCESS_TOKEN', chalk.green(process.env.PERSONAL_ACCESS_TOKEN ? '[REDACTED]' : 'Not set')],
+    ['OPENAI_API_KEY', chalk.green(process.env.OPENAI_API_KEY ? '[REDACTED]' : 'Not set')],
   ];
   console.log(table(envVars, config));
 
@@ -162,14 +162,14 @@ async function main() {
   }
 
   console.log(chalk.blue('\nEvaluated CLI Arguments:'));
-  const cliArgs = [
-    ['ORGANIZATION', argv.organization || 'Not set'],
-    ['PROJECT', argv.project || 'Not set'],
-    ['REPOSITORY_ID', argv.repositoryId || 'Not set'],
-    ['TITLE', argv.title || 'Not set (will be generated)'],
-    ['DESCRIPTION', argv.description || 'Not set (will be generated)'],
-    ['PERSONAL_ACCESS_TOKEN', argv.personalAccessToken ? '[REDACTED]' : 'Not set'],
-    ['OPENAI_API_KEY', argv.openaiApiKey ? '[REDACTED]' : 'Not set'],
+  const cliArgs: [string, string][] = [
+    ['ORGANIZATION', chalk.green(argv.organization || 'Not set')],
+    ['PROJECT', chalk.green(argv.project || 'Not set')],
+    ['REPOSITORY_ID', chalk.green(argv.repositoryId || 'Not set')],
+    ['TITLE', chalk.green(argv.title || 'Not set (will be generated)')],
+    ['DESCRIPTION', chalk.green(argv.description || 'Not set (will be generated)')],
+    ['PERSONAL_ACCESS_TOKEN', chalk.green(argv.personalAccessToken ? '[REDACTED]' : 'Not set')],
+    ['OPENAI_API_KEY', chalk.green(argv.openaiApiKey ? '[REDACTED]' : 'Not set')],
   ];
   console.log(table(cliArgs, config));
 
@@ -249,11 +249,11 @@ async function main() {
       output: process.stdout
     });
 
-    const prDetails = [
-      ['Title', argv.title],
-      ['Source Branch', sourceBranch],
-      ['Target Branch', targetBranch],
-      ['Description', argv.description.slice(0, 50) + (argv.description.length > 50 ? '...' : '')],
+    const prDetails: [string, string][] = [
+      ['Title', chalk.green(argv.title)],
+      ['Source Branch', chalk.green(sourceBranch)],
+      ['Target Branch', chalk.green(targetBranch)],
+      ['Description', chalk.green(argv.description.slice(0, 50) + (argv.description.length > 50 ? '...' : ''))],
     ];
 
     console.log(chalk.cyan('\nPull Request Details:'));
@@ -295,12 +295,12 @@ async function main() {
     console.log(chalk.green('Pull request created successfully:'));
     
 
-    const finalPrDetails = [
-      ['Title', argv.title],
-      ['Source Branch', sourceBranch],
-      ['Target Branch', targetBranch],
-      ['Description', argv.description.slice(0, 50) + (argv.description.length > 50 ? '...' : '')],
-      ['Pull Request ID', pullRequestId.toString()],
+    const finalPrDetails: [string, string][] = [
+      ['Title', chalk.green(argv.title)],
+      ['Source Branch', chalk.green(sourceBranch)],
+      ['Target Branch', chalk.green(targetBranch)],
+      ['Description', chalk.green(argv.description.slice(0, 50) + (argv.description.length > 50 ? '...' : ''))],
+      ['Pull Request ID', chalk.green(pullRequestId.toString())],
       ['View PR', chalk.blue(`https://dev.azure.com/${argv.organization}/${argv.project}/_git/${argv.repositoryId}/pullrequest/${pullRequestId}`)],
     ];
 
