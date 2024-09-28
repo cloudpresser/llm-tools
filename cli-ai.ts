@@ -67,6 +67,10 @@ async function generateWithAI(prompt: string, gitDiff: string, isMock: boolean):
   // Limit git diff size
   const limitedGitDiff = gitDiff.length > 2000 ? gitDiff.substring(0, 2000) + "..." : gitDiff;
 
+  if (isMock) {
+    return "This is a placeholder response for mock mode.";
+  }
+
   const response = await openai.chat.completions.create({
     model: "gpt-4",
     messages: [
@@ -86,6 +90,16 @@ async function retrieveRelevantInfo(gitDiff: string): Promise<string> {
 }
 
 async function generatePRDescription(gitDiff: string, template: string, isMock: boolean): Promise<string> {
+  if (isMock) {
+    const mockSummary = "This is a mock summary for the pull request.";
+    const mockTestPlan = "This is a mock test plan for the pull request.";
+
+    return template
+      .replace('<!-- Please provide enough information so that others can review your pull request. The three fields below are mandatory. -->', '')
+      .replace('<!-- Explain the **motivation** for making this change. What existing problem does the pull request solve? -->', mockSummary)
+      .replace('<!-- Demonstrate the code is solid. Example: How to test the feature in storybook, screenshots / videos if the pull request changes the user interface. The exact commands you ran and their output (for code covered by unit tests) \nFor more details, see: https://gray-smoke-082026a10-docs.centralus.2.azurestaticapps.net/Pull-Request-Policy/PR-Review-Guidelines\n-->', mockTestPlan);
+  }
+
   if (isMock) {
     const mockSummary = "This is a mock summary for the pull request.";
     const mockTestPlan = "This is a mock test plan for the pull request.";
@@ -199,9 +213,9 @@ async function main(args: Arguments) {
         spinner: 'dots',
         color: 'cyan'
       }).start();
-      cliArgs.title = cliArgs.mock
+      cliArgs.title = args.mock
         ? "Mock Pull Request Title"
-        : await generateWithAI("Generate a concise and descriptive pull request title based on the following git diff:", gitDiff, cliArgs.mock as boolean);
+        : await generateWithAI("Generate a concise and descriptive pull request title based on the following git diff:", gitDiff, args.mock as boolean);
       titleSpinner.succeed(neonPink('Pull request title generated.'));
     }
 
@@ -212,7 +226,9 @@ async function main(args: Arguments) {
         color: 'cyan'
       }).start();
       const prTemplate = await readPRTemplate();
-      cliArgs.description = await generatePRDescription(gitDiff, prTemplate, cliArgs.mock as boolean);
+      cliArgs.description = args.mock
+        ? "This is a mock description for the pull request."
+        : await generatePRDescription(gitDiff, prTemplate, args.mock as boolean);
       descriptionSpinner.succeed(neonPink('Pull request description generated.'));
     }
 
@@ -369,15 +385,13 @@ async function main(args: Arguments) {
   }
 }
 
-yargs(process.argv.slice(2))
+const args = yargs(process.argv.slice(2))
   .option('mock', {
     type: 'boolean',
     description: 'Use mock mode',
     default: false,
   })
-  .parse();
-
-const args = yargs.argv as Arguments;
+  .argv as Arguments;
 
 main(args).catch((error) => {
   console.log(neonGreen('Unhandled error in main:'), error);
