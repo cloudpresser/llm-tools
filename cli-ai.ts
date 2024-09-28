@@ -89,31 +89,31 @@ async function main() {
       wrapWord: true,
     },
     border: {
-      topBody: chalk.gray('─'),
-      topJoin: chalk.gray('┬'),
-      topLeft: chalk.gray('┌'),
-      topRight: chalk.gray('┐'),
-      bottomBody: chalk.gray('─'),
-      bottomJoin: chalk.gray('┴'),
-      bottomLeft: chalk.gray('└'),
-      bottomRight: chalk.gray('┘'),
-      bodyLeft: chalk.gray('│'),
-      bodyRight: chalk.gray('│'),
-      bodyJoin: chalk.gray('│'),
-      joinBody: chalk.gray('─'),
-      joinLeft: chalk.gray('├'),
-      joinRight: chalk.gray('┤'),
-      joinJoin: chalk.gray('┼'),
+      topBody: chalk.cyan('─'),
+      topJoin: chalk.cyan('┬'),
+      topLeft: chalk.cyan('┌'),
+      topRight: chalk.cyan('┐'),
+      bottomBody: chalk.cyan('─'),
+      bottomJoin: chalk.cyan('┴'),
+      bottomLeft: chalk.cyan('└'),
+      bottomRight: chalk.cyan('┘'),
+      bodyLeft: chalk.cyan('│'),
+      bodyRight: chalk.cyan('│'),
+      bodyJoin: chalk.cyan('│'),
+      joinBody: chalk.cyan('─'),
+      joinLeft: chalk.cyan('├'),
+      joinRight: chalk.cyan('┤'),
+      joinJoin: chalk.cyan('┼'),
     },
   };
 
   console.log(chalk.blue('\nEnvironment Variables:'));
   const envVars: [string, string][] = [
-    ['ORGANIZATION', chalk.green(process.env.ORGANIZATION || 'Not set')],
-    ['PROJECT', chalk.green(process.env.PROJECT || 'Not set')],
-    ['REPOSITORY_ID', chalk.green(process.env.REPOSITORY_ID || 'Not set')],
-    ['PERSONAL_ACCESS_TOKEN', chalk.green(process.env.PERSONAL_ACCESS_TOKEN ? '[REDACTED]' : 'Not set')],
-    ['OPENAI_API_KEY', chalk.green(process.env.OPENAI_API_KEY ? '[REDACTED]' : 'Not set')],
+    ['ORGANIZATION', chalk.magenta(process.env.ORGANIZATION || 'Not set')],
+    ['PROJECT', chalk.magenta(process.env.PROJECT || 'Not set')],
+    ['REPOSITORY_ID', chalk.magenta(process.env.REPOSITORY_ID || 'Not set')],
+    ['PERSONAL_ACCESS_TOKEN', chalk.magenta(process.env.PERSONAL_ACCESS_TOKEN ? '[REDACTED]' : 'Not set')],
+    ['OPENAI_API_KEY', chalk.magenta(process.env.OPENAI_API_KEY ? '[REDACTED]' : 'Not set')],
   ];
   console.log(table(envVars, config));
 
@@ -163,13 +163,13 @@ async function main() {
 
   console.log(chalk.blue('\nEvaluated CLI Arguments:'));
   const cliArgs: [string, string][] = [
-    ['ORGANIZATION', chalk.green(argv.organization || 'Not set')],
-    ['PROJECT', chalk.green(argv.project || 'Not set')],
-    ['REPOSITORY_ID', chalk.green(argv.repositoryId || 'Not set')],
-    ['TITLE', chalk.green(argv.title || 'Not set (will be generated)')],
-    ['DESCRIPTION', chalk.green(argv.description || 'Not set (will be generated)')],
-    ['PERSONAL_ACCESS_TOKEN', chalk.green(argv.personalAccessToken ? '[REDACTED]' : 'Not set')],
-    ['OPENAI_API_KEY', chalk.green(argv.openaiApiKey ? '[REDACTED]' : 'Not set')],
+    ['ORGANIZATION', chalk.magenta(argv.organization || 'Not set')],
+    ['PROJECT', chalk.magenta(argv.project || 'Not set')],
+    ['REPOSITORY_ID', chalk.magenta(argv.repositoryId || 'Not set')],
+    ['TITLE', chalk.magenta(argv.title || 'Not set (will be generated)')],
+    ['DESCRIPTION', chalk.magenta(argv.description || 'Not set (will be generated)')],
+    ['PERSONAL_ACCESS_TOKEN', chalk.magenta(argv.personalAccessToken ? '[REDACTED]' : 'Not set')],
+    ['OPENAI_API_KEY', chalk.magenta(argv.openaiApiKey ? '[REDACTED]' : 'Not set')],
   ];
   console.log(table(cliArgs, config));
 
@@ -250,10 +250,10 @@ async function main() {
     });
 
     const prDetails: [string, string][] = [
-      ['Title', chalk.green(argv.title)],
-      ['Source Branch', chalk.green(sourceBranch)],
-      ['Target Branch', chalk.green(targetBranch)],
-      ['Description', chalk.green(argv.description.slice(0, 50) + (argv.description.length > 50 ? '...' : ''))],
+      ['Title', chalk.magenta(argv.title)],
+      ['Source Branch', chalk.magenta(sourceBranch)],
+      ['Target Branch', chalk.magenta(targetBranch)],
+      ['Description', chalk.magenta(argv.description.slice(0, 50) + (argv.description.length > 50 ? '...' : ''))],
     ];
 
     console.log(chalk.cyan('\nPull Request Details:'));
@@ -296,12 +296,12 @@ async function main() {
     
 
     const finalPrDetails: [string, string][] = [
-      ['Title', chalk.green(argv.title)],
-      ['Source Branch', chalk.green(sourceBranch)],
-      ['Target Branch', chalk.green(targetBranch)],
-      ['Description', chalk.green(argv.description.slice(0, 50) + (argv.description.length > 50 ? '...' : ''))],
-      ['Pull Request ID', chalk.green(pullRequestId.toString())],
-      ['View PR', chalk.blue(`https://dev.azure.com/${argv.organization}/${argv.project}/_git/${argv.repositoryId}/pullrequest/${pullRequestId}`)],
+      ['Title', chalk.magenta(argv.title)],
+      ['Source Branch', chalk.magenta(sourceBranch)],
+      ['Target Branch', chalk.magenta(targetBranch)],
+      ['Description', chalk.magenta(argv.description.slice(0, 50) + (argv.description.length > 50 ? '...' : ''))],
+      ['Pull Request ID', chalk.magenta(pullRequestId.toString())],
+      ['View PR', chalk.cyan(`https://dev.azure.com/${argv.organization}/${argv.project}/_git/${argv.repositoryId}/pullrequest/${pullRequestId}`)],
     ];
 
     console.log(chalk.green('\nPull Request Created Successfully:'));
