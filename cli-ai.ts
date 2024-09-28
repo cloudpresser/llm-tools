@@ -7,7 +7,6 @@ import fs from 'fs/promises';
 import path from 'path';
 import readline from 'readline';
 import { execSync } from 'child_process';
-import * as prettyCli from 'pretty-cli';
 import chalk from 'chalk';
 import ora from 'ora';
 import columnify from 'columnify';
@@ -159,26 +158,14 @@ async function main() {
       const titleSpinner = ora('Generating pull request title...').start();
       argv.title = await generateWithAI("Generate a concise and descriptive pull request title based on the following git diff:", gitDiff);
       titleSpinner.succeed('Pull request title generated.');
-
     }
 
     if (!argv.description) {
       const descriptionSpinner = ora('Generating pull request description...').start();
       const prTemplate = await readPRTemplate();
-      descriptionSpinner.succeed('Pull request description generated.');
       argv.description = await generatePRDescription(gitDiff, prTemplate);
+      descriptionSpinner.succeed('Pull request description generated.');
     }
-
-    console.log(chalk.blue('Pull Request Parameters:'));
-    console.log(chalk.green('Source Branch:'), sourceBranch);
-    console.log(chalk.green('Target Branch:'), targetBranch);
-    console.log(chalk.green('Organization:'), argv.organization || '');
-    console.log(chalk.green('Project:'), argv.project || '');
-    console.log(chalk.green('Repository ID:'), argv.repositoryId || '');
-    console.log(chalk.green('Title:'), argv.title);
-    console.log(chalk.green('Description:'));
-    console.log(chalk.green(argv.description));
-    console.log(chalk.green('Work Items:'), []); // Empty array as per your current implementation
 
     // Function to check if a command is available
     function isCommandAvailable(command: string): boolean {
@@ -192,12 +179,14 @@ async function main() {
 
     // Function to open editor and get content
     async function openEditor(initialContent: string, filePrefix: string): Promise<string> {
+      const spinner = ora('Opening editor...').start();
       const tempFile = path.join(process.cwd(), `${filePrefix}_temp.md`);
       await fs.writeFile(tempFile, initialContent);
 
       const editor = ['nvim', 'nano', 'vim'].find(isCommandAvailable);
       if (!editor) {
         console.log('No suitable editor found. Skipping manual edit.');
+        spinner.fail('Error while editing.');
         return initialContent;
       }
 
@@ -205,7 +194,9 @@ async function main() {
         execSync(`${editor} ${tempFile}`, { stdio: 'inherit' });
         const editedContent = await fs.readFile(tempFile, 'utf-8');
         await fs.unlink(tempFile);
-        return editedContent.trim();
+        const result = editedContent.trim();
+        spinner.succeed('Editor closed.');
+        return result;
       } catch (error) {
         console.error('Error while editing:', error);
         return initialContent;
@@ -214,17 +205,24 @@ async function main() {
 
     // Open editor for title
     argv.title = await openEditor(argv.title, 'pr_title');
-    console.log('Updated Title:', argv.title);
 
     // Open editor for description
     argv.description = await openEditor(argv.description, 'pr_description');
-    console.log('Updated Description:');
-    console.log(argv.description);
+
 
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout
     });
+
+    const prDetails = {
+      'Title': argv.title,
+      'Source Branch': sourceBranch,
+      'Target Branch': targetBranch,
+      'Description': argv.description.slice(0,25),
+    };
+
+    console.log(columnify(prDetails, { columnSplitter: ' | ' }));
 
     const confirm = await new Promise<string>(resolve => {
       rl.question('Do you want to create this pull request? (y/n) ', resolve);
@@ -238,6 +236,8 @@ async function main() {
     }
 
     console.log(chalk.blue('Creating pull request...'));
+
+
     const pullRequestId = await createPullRequest({
       organization: argv.organization || '',
       project: argv.project || '',
@@ -258,16 +258,11 @@ async function main() {
     spinner.succeed('Pull request created successfully.');
 
     console.log(chalk.green('Pull request created successfully:'));
-    const prDetails = {
-      'Pull Request ID': pullRequestId,
-      'Title': argv.title,
-      'Source Branch': sourceBranch,
-      'Target Branch': targetBranch,
-      'Description': argv.description,
-      'View PR': `https://dev.azure.com/${argv.organization}/${argv.project}/_git/${argv.repositoryId}/pullrequest/${pullRequestId}`
-    };
+    
 
-    console.log(columnify(prDetails, { columnSplitter: ' | ' }));
+    console.log(columnify({...prDetails,'Pull Request ID': pullRequestId,
+      'Description': argv.description.slice(0,25),
+      'View PR': `https://dev.azure.com/${argv.organization}/${argv.project}/_git/${argv.repositoryId}/pullrequest/${pullRequestId}`}, { columnSplitter: ' | ' }));
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.log(chalk.red('Error creating pull request:'), error.message);
