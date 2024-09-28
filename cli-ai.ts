@@ -3,6 +3,8 @@ import { createPullRequest } from './src/azureDevOpsClient';
 import dotenv from 'dotenv';
 import simpleGit from 'simple-git';
 import OpenAI from 'openai';
+import { Arguments } from 'yargs';
+import { TableUserConfig } from 'table';
 import fs from 'fs/promises';
 import path from 'path';
 import readline from 'readline';
@@ -10,6 +12,7 @@ import { execSync } from 'child_process';
 import chalk from 'chalk';
 import ora from 'ora';
 import columnify from 'columnify';
+declare module 'columnify';
 import { table } from 'table';
 
 // Custom neon colors
@@ -56,7 +59,11 @@ async function readPRTemplate(): Promise<string> {
   }
 }
 
-async function generateWithAI(prompt: string, gitDiff: string): Promise<string> {
+async function generateWithAI(prompt: string, gitDiff: string, isMock: boolean): Promise<string> {
+  if (isMock) {
+    return "This is a placeholder response for mock mode.";
+  }
+
   // Limit git diff size
   const limitedGitDiff = gitDiff.length > 2000 ? gitDiff.substring(0, 2000) + "..." : gitDiff;
 
@@ -78,12 +85,22 @@ async function retrieveRelevantInfo(gitDiff: string): Promise<string> {
   return "Relevant project guidelines and best practices...";
 }
 
-async function generatePRDescription(gitDiff: string, template: string): Promise<string> {
+async function generatePRDescription(gitDiff: string, template: string, isMock: boolean): Promise<string> {
+  if (isMock) {
+    const mockSummary = "This is a mock summary for the pull request.";
+    const mockTestPlan = "This is a mock test plan for the pull request.";
+
+    return template
+      .replace('<!-- Please provide enough information so that others can review your pull request. The three fields below are mandatory. -->', '')
+      .replace('<!-- Explain the **motivation** for making this change. What existing problem does the pull request solve? -->', mockSummary)
+      .replace('<!-- Demonstrate the code is solid. Example: How to test the feature in storybook, screenshots / videos if the pull request changes the user interface. The exact commands you ran and their output (for code covered by unit tests) \nFor more details, see: https://gray-smoke-082026a10-docs.centralus.2.azurestaticapps.net/Pull-Request-Policy/PR-Review-Guidelines\n-->', mockTestPlan);
+  }
+
   const summaryPrompt = `Generate a concise summary for a pull request based on the given git diff. Include the motivation and problem solved.`;
   const testPlanPrompt = `Generate a brief test plan for a pull request based on the given git diff. Include key test areas and any specific commands to run.`;
 
-  const summary = await generateWithAI(summaryPrompt, gitDiff);
-  const testPlan = await generateWithAI(testPlanPrompt, gitDiff);
+  const summary = await generateWithAI(summaryPrompt, gitDiff, isMock);
+  const testPlan = await generateWithAI(testPlanPrompt, gitDiff, isMock);
 
   return template
     .replace('<!-- Please provide enough information so that others can review your pull request. The three fields below are mandatory. -->', '')
@@ -91,12 +108,12 @@ async function generatePRDescription(gitDiff: string, template: string): Promise
     .replace('<!-- Demonstrate the code is solid. Example: How to test the feature in storybook, screenshots / videos if the pull request changes the user interface. The exact commands you ran and their output (for code covered by unit tests) \nFor more details, see: https://gray-smoke-082026a10-docs.centralus.2.azurestaticapps.net/Pull-Request-Policy/PR-Review-Guidelines\n-->', testPlan);
 }
 
-async function main() {
+async function main(args: Arguments) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
   });
-  const config = {
+  const config: TableUserConfig = {
     columns: {
       0: { alignment: 'right', width: 15 },
       1: { alignment: 'left', width: 50 },
@@ -123,71 +140,39 @@ async function main() {
     },
   };
 
+  const cliArgs = await yargs(process.argv.slice(2))
+
   console.log(neonGreen('\nEnvironment Variables:'));
   const envVars: [string, string][] = [
     ['ORGANIZATION', neonPink(process.env.ORGANIZATION || 'Not set')],
     ['PROJECT', neonPink(process.env.PROJECT || 'Not set')],
     ['REPOSITORY_ID', neonPink(process.env.REPOSITORY_ID || 'Not set')],
-    ['PERSONAL_ACCESS_TOKEN', neonPink(process.env.PERSONAL_ACCESS_TOKEN ? '[REDACTED]' : 'Not set')],
-    ['OPENAI_API_KEY', neonPink(process.env.OPENAI_API_KEY ? '[REDACTED]' : 'Not set')],
+    ['PERSONAL_ACCESS_TOKEN', neonPink((process.env.PERSONAL_ACCESS_TOKEN || 'Not set').substring(0, 10) + '...')],
+    ['OPENAI_API_KEY', neonPink((process.env.OPENAI_API_KEY || 'Not set').substring(0, 10) + '...')],
+    
   ];
   console.log(table(envVars, config));
 
-  const argv = await yargs(process.argv.slice(2))
-    .option('organization', {
-      type: 'string',
-      description: 'Azure DevOps organization name',
-      default: process.env.ORGANIZATION,
-    })
-    .option('project', {
-      type: 'string',
-      description: 'Project name',
-      default: process.env.PROJECT,
-    })
-    .option('repositoryId', {
-      type: 'string',
-      description: 'Repository ID',
-      default: process.env.REPOSITORY_ID,
-    })
-    .option('title', {
-      type: 'string',
-      description: 'Pull request title',
-    })
-    .option('description', {
-      type: 'string',
-      description: 'Pull request description',
-    })
-    .option('personalAccessToken', {
-      type: 'string',
-      description: 'Azure DevOps personal access token',
-      default: process.env.PERSONAL_ACCESS_TOKEN,
-    })
-    .option('openaiApiKey', {
-      type: 'string',
-      description: 'OpenAI API Key',
-      default: process.env.OPENAI_API_KEY,
-    })
-    .parse();
-
-  if (!process.env.PERSONAL_ACCESS_TOKEN && !argv.personalAccessToken) {
+  if (!process.env.PERSONAL_ACCESS_TOKEN && !cliArgs.personalAccessToken) {
     throw new Error('Error: Personal Access Token is not set in the .env file or provided as an argument.');
   }
 
-  if (!process.env.OPENAI_API_KEY && !argv.openaiApiKey) {
+  if (!process.env.OPENAI_API_KEY && !cliArgs.openaiApiKey) {
     throw new Error('Error: OpenAI API Key is not set in the .env file or provided as an argument.');
   }
 
   console.log(neonGreen('\nEvaluated CLI Arguments:'));
-  const cliArgs: [string, string][] = [
-    ['ORGANIZATION', neonPink(argv.organization || 'Not set')],
-    ['PROJECT', neonPink(argv.project || 'Not set')],
-    ['REPOSITORY_ID', neonPink(argv.repositoryId || 'Not set')],
-    ['TITLE', neonPink(argv.title || 'Not set (will be generated)')],
-    ['DESCRIPTION', neonPink(argv.description || 'Not set (will be generated)')],
-    ['PERSONAL_ACCESS_TOKEN', neonPink(argv.personalAccessToken ? '[REDACTED]' : 'Not set')],
-    ['OPENAI_API_KEY', neonPink(argv.openaiApiKey ? '[REDACTED]' : 'Not set')],
+  const parsedArgs: [string, string][] = [
+    ['ORGANIZATION', neonPink(cliArgs.organization || 'Not set')],
+    ['PROJECT', neonPink(cliArgs.project || 'Not set')],
+    ['REPOSITORY_ID', neonPink(cliArgs.repositoryId || 'Not set')],
+    ['TITLE', neonPink(cliArgs.title || 'Not set (will be generated)')],
+    ['DESCRIPTION', neonPink(cliArgs.description || 'Not set (will be generated)')],
+    ['PERSONAL_ACCESS_TOKEN', neonPink((cliArgs.personalAccessToken || 'Not set').substring(0, 10) + '...')],
+    ['OPENAI_API_KEY', neonPink((cliArgs.openaiApiKey || 'Not set').substring(0, 10) + '...')],
   ];
-  console.log(table(cliArgs, config));
+
+  console.log(table(parsedArgs, config));
 
   try {
     const spinner = ora({
@@ -208,24 +193,26 @@ async function main() {
       throw new Error('Source and target branches cannot be the same. Please make sure you are not on the main branch.');
     }
 
-    if (!argv.title) {
+    if (!args.title) {
       const titleSpinner = ora({
         text: neonBlue('Generating pull request title...'),
         spinner: 'dots',
         color: 'cyan'
       }).start();
-      argv.title = await generateWithAI("Generate a concise and descriptive pull request title based on the following git diff:", gitDiff);
+      cliArgs.title = cliArgs.mock
+        ? "Mock Pull Request Title"
+        : await generateWithAI("Generate a concise and descriptive pull request title based on the following git diff:", gitDiff, cliArgs.mock as boolean);
       titleSpinner.succeed(neonPink('Pull request title generated.'));
     }
 
-    if (!argv.description) {
+    if (!args.description) {
       const descriptionSpinner = ora({
         text: neonBlue('Generating pull request description...'),
         spinner: 'dots',
         color: 'cyan'
       }).start();
       const prTemplate = await readPRTemplate();
-      argv.description = await generatePRDescription(gitDiff, prTemplate);
+      cliArgs.description = await generatePRDescription(gitDiff, prTemplate, cliArgs.mock as boolean);
       descriptionSpinner.succeed(neonPink('Pull request description generated.'));
     }
 
@@ -284,10 +271,10 @@ async function main() {
 
     console.log(neonGreen('\nPull Request Details:'));
     const prDetailsEditTitle: [string, string][] = [
-      ['Title', neonPink(argv.title)],
+      ['Title', neonPink(cliArgs.title)],
       ['Source Branch', neonPink(sourceBranch)],
       ['Target Branch', neonPink(targetBranch)],
-      ['Description', neonPink((argv.description.length > 50 ? argv.description.substring(0, 50) + '...' : argv.description))],
+      ['Description', neonPink((cliArgs.description.length > 50 ? cliArgs.description.substring(0, 50) + '...' : cliArgs.description))],
     ];
 
     console.log(table(prDetailsEditTitle, config));
@@ -295,16 +282,16 @@ async function main() {
     // Ask if user wants to edit title
     const editTitle = await askToEdit('Do you want to edit the pull request title? (y/n) ');
     if (editTitle) {
-      argv.title = await openEditor(argv.title, 'pr_title');
+      cliArgs.title = await openEditor(cliArgs.title, 'pr_title');
     }
 
     console.log(neonGreen('\nUpdated Pull Request Details:'));
 
     const prDetailsEditDescription: [string, string][] = [
-      ['Title', neonPink(argv.title)],
+      ['Title', neonPink(cliArgs.title)],
       ['Source Branch', neonPink(sourceBranch)],
       ['Target Branch', neonPink(targetBranch)],
-      ['Description', neonPink((argv.description))],
+      ['Description', neonPink((cliArgs.description))],
     ];
 
     console.log(table(prDetailsEditDescription, config));
@@ -312,7 +299,7 @@ async function main() {
     // Ask if user wants to edit description
     const editDescription = await askToEdit('Do you want to edit the pull request description? (y/n) ');
     if (editDescription) {
-      argv.description = await openEditor(argv.description, 'pr_description');
+      cliArgs.description = await openEditor(cliArgs.description, 'pr_description');
     }
 
 
@@ -328,19 +315,19 @@ async function main() {
 
 
     const pullRequestId = await createPullRequest({
-      organization: argv.organization || '',
-      project: argv.project || '',
-      repositoryId: argv.repositoryId || '',
-      title: argv.title,
-      description: argv.description,
+      organization: cliArgs.organization as string || '',
+      project: cliArgs.project as string || '',
+      repositoryId: cliArgs.repositoryId as string || '',
+      title: cliArgs.title as string,
+      description: cliArgs.description as string,
       workItems: [],
       targetBranch: targetBranch,
       sourceBranch: sourceBranch,
-      personalAccessToken: argv.personalAccessToken || '',
+      personalAccessToken: cliArgs.personalAccessToken as string || '',
     });
     spinner.start('Creating pull request...');
 
-    if (!argv.organization || !argv.project || !argv.repositoryId) {
+    if (!cliArgs.organization || !cliArgs.project || !cliArgs.repositoryId) {
       console.warn('Warning: Some required parameters were not provided. Check your .env file or command-line arguments.');
     }
 
@@ -348,12 +335,12 @@ async function main() {
 
     console.log(neonGreen('Pull request created successfully:'));
     const finalPrDetails: [string, string][] = [
-      ['Title', neonPink(argv.title)],
+      ['Title', neonPink(cliArgs.title)],
       ['Source Branch', neonPink(sourceBranch)],
       ['Target Branch', neonPink(targetBranch)],
-      ['Description', neonPink( (argv.description.length > 50 ? argv.description.slice(0, 50) + '...' : ''))],
+      ['Description', neonPink( (cliArgs.description.length > 50 ? cliArgs.description.slice(0, 50) + '...' : ''))],
       ['Pull Request ID', neonPink(pullRequestId.toString())],
-      ['View PR', neonBlue(`https://dev.azure.com/${argv.organization}/${argv.project}/_git/${argv.repositoryId}/pullrequest/${pullRequestId}`)],
+      ['View PR', neonBlue(`https://dev.azure.com/${cliArgs.organization}/${cliArgs.project}/_git/${cliArgs.repositoryId}/pullrequest/${pullRequestId}`)],
     ];
     console.log(neonGreen('\nPull Request Created Successfully:'));
     console.log(table(finalPrDetails, config));
@@ -382,6 +369,16 @@ async function main() {
   }
 }
 
-main().catch((error) => {
+yargs(process.argv.slice(2))
+  .option('mock', {
+    type: 'boolean',
+    description: 'Use mock mode',
+    default: false,
+  })
+  .parse();
+
+const args = yargs.argv as Arguments;
+
+main(args).catch((error) => {
   console.log(neonGreen('Unhandled error in main:'), error);
 });
