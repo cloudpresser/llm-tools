@@ -91,12 +91,11 @@ async function generatePRDescription(gitDiff: string, template: string): Promise
     .replace('<!-- Demonstrate the code is solid. Example: How to test the feature in storybook, screenshots / videos if the pull request changes the user interface. The exact commands you ran and their output (for code covered by unit tests) \nFor more details, see: https://gray-smoke-082026a10-docs.centralus.2.azurestaticapps.net/Pull-Request-Policy/PR-Review-Guidelines\n-->', testPlan);
 }
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
-
 async function main() {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
   const config = {
     columns: {
       0: { alignment: 'right', width: 15 },
@@ -268,27 +267,29 @@ async function main() {
     }
 
 
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-
     // Function to ask user if they want to edit
     async function askToEdit(prompt: string): Promise<boolean> {
       return new Promise((resolve) => {
+        const rl = readline.createInterface({
+          input: process.stdin,
+          output: process.stdout
+        });
+
         rl.question(prompt, (answer) => {
+          rl.close();
           resolve(answer.toLowerCase() === 'y');
         });
       });
     }
+
+    console.log(neonGreen('\nPull Request Details:'));
     const prDetailsEditTitle: [string, string][] = [
       ['Title', neonPink(argv.title)],
       ['Source Branch', neonPink(sourceBranch)],
       ['Target Branch', neonPink(targetBranch)],
-      ['Description', neonPink((argv.description.length > 50 ? argv.description + '...' : ''))],
+      ['Description', neonPink((argv.description.length > 50 ? argv.description.substring(0, 50) + '...' : argv.description))],
     ];
 
-    console.log(neonGreen('\nPull Request Details:'));
     console.log(table(prDetailsEditTitle, config));
 
     // Ask if user wants to edit title
@@ -297,17 +298,17 @@ async function main() {
       argv.title = await openEditor(argv.title, 'pr_title');
     }
 
+    console.log(neonGreen('\nUpdated Pull Request Details:'));
 
-    console.log(neonGreen('\nPull Request Details:'));
-
-        const prDetailsEditDescription: [string, string][] = [
+    const prDetailsEditDescription: [string, string][] = [
       ['Title', neonPink(argv.title)],
       ['Source Branch', neonPink(sourceBranch)],
       ['Target Branch', neonPink(targetBranch)],
-      ['Description', neonPink(argv.description)],
+      ['Description', neonPink((argv.description))],
     ];
 
     console.log(table(prDetailsEditDescription, config));
+    
     // Ask if user wants to edit description
     const editDescription = await askToEdit('Do you want to edit the pull request description? (y/n) ');
     if (editDescription) {
@@ -315,15 +316,11 @@ async function main() {
     }
 
 
+    const confirm = await askToEdit('Do you want to create this pull request? (y/n) ');
 
-
-    const confirm = await new Promise<string>(resolve => {
-      rl.question(neonGreen('Do you want to create this pull request? (y/n) '), resolve);
-    });
-
-
-    if (confirm.toLowerCase() !== 'y') {
+    if (!confirm) {
       console.log(neonGreen('Pull request creation cancelled.'));
+      rl.close();
       return;
     }
 
@@ -350,17 +347,14 @@ async function main() {
     spinner.succeed(neonPink('Pull request created successfully.'));
 
     console.log(neonGreen('Pull request created successfully:'));
-    
-
     const finalPrDetails: [string, string][] = [
       ['Title', neonPink(argv.title)],
       ['Source Branch', neonPink(sourceBranch)],
       ['Target Branch', neonPink(targetBranch)],
-      ['Description', neonPink(argv.description.slice(0, 50) + (argv.description.length > 50 ? '...' : ''))],
+      ['Description', neonPink( (argv.description.length > 50 ? argv.description.slice(0, 50) + '...' : ''))],
       ['Pull Request ID', neonPink(pullRequestId.toString())],
       ['View PR', neonBlue(`https://dev.azure.com/${argv.organization}/${argv.project}/_git/${argv.repositoryId}/pullrequest/${pullRequestId}`)],
     ];
-
     console.log(neonGreen('\nPull Request Created Successfully:'));
     console.log(table(finalPrDetails, config));
     rl.close();
