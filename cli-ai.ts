@@ -319,44 +319,47 @@ async function main(args: Arguments) {
     }
 
 
-    const confirm = await askToEdit('Do you want to create this pull request? (y/n) ');
+    let pullRequestId = 'Dry Run - No ID';
+    if (args.dryRun) {
+      console.log(neonGreen('Dry run mode enabled. No pull request will be created.'));
+    } else {
+      const confirm = await askToEdit('Do you want to create this pull request? (y/n) ');
 
-    if (!confirm) {
-      console.log(neonGreen('Pull request creation cancelled.'));
-      rl.close();
-      return;
+      if (!confirm) {
+        console.log(neonGreen('Pull request creation cancelled.'));
+        rl.close();
+        return;
+      }
+
+      console.log(neonGreen('Creating pull request...'));
+
+      pullRequestId = await createPullRequest({
+        organization: cliArgs.organization as string || '',
+        project: cliArgs.project as string || '',
+        repositoryId: cliArgs.repositoryId as string || '',
+        title: cliArgs.title as string,
+        description: cliArgs.description as string,
+        workItems: [],
+        targetBranch: targetBranch,
+        sourceBranch: sourceBranch,
+        personalAccessToken: cliArgs.personalAccessToken as string || '',
+      });
+      spinner.start('Creating pull request...');
+
+      if (!cliArgs.organization || !cliArgs.project || !cliArgs.repositoryId) {
+        console.warn('Warning: Some required parameters were not provided. Check your .env file or command-line arguments.');
+      }
+
+      spinner.succeed(neonPink('Pull request created successfully.'));
     }
 
-    console.log(neonGreen('Creating pull request...'));
-
-
-    const pullRequestId = await createPullRequest({
-      organization: cliArgs.organization as string || '',
-      project: cliArgs.project as string || '',
-      repositoryId: cliArgs.repositoryId as string || '',
-      title: cliArgs.title as string,
-      description: cliArgs.description as string,
-      workItems: [],
-      targetBranch: targetBranch,
-      sourceBranch: sourceBranch,
-      personalAccessToken: cliArgs.personalAccessToken as string || '',
-    });
-    spinner.start('Creating pull request...');
-
-    if (!cliArgs.organization || !cliArgs.project || !cliArgs.repositoryId) {
-      console.warn('Warning: Some required parameters were not provided. Check your .env file or command-line arguments.');
-    }
-
-    spinner.succeed(neonPink('Pull request created successfully.'));
-
-    console.log(neonGreen('Pull request created successfully:'));
     const finalPrDetails: [string, string][] = [
       ['Title', neonPink(cliArgs.title)],
       ['Source Branch', neonPink(sourceBranch)],
       ['Target Branch', neonPink(targetBranch)],
-      ['Description', neonPink( (cliArgs.description.length > 50 ? cliArgs.description.slice(0, 50) + '...' : ''))],
+      ['Description', neonPink(cliArgs.description)],
       ['Pull Request ID', neonPink(pullRequestId.toString())],
-      ['View PR', neonBlue(`https://dev.azure.com/${cliArgs.organization}/${cliArgs.project}/_git/${cliArgs.repositoryId}/pullrequest/${pullRequestId}`)],
+      ['View PR', args.dryRun ? neonBlue('Dry Run - No URL') : neonBlue(`https://dev.azure.com/${cliArgs.organization}/${cliArgs.project}/_git/${cliArgs.repositoryId}/pullrequest/${pullRequestId}`)],
     ];
     console.log(neonGreen('\nPull Request Created Successfully:'));
     console.log(table(finalPrDetails, config));
@@ -389,6 +392,11 @@ const args = yargs(process.argv.slice(2))
   .option('mock', {
     type: 'boolean',
     description: 'Use mock mode',
+    default: false,
+  })
+  .option('dry-run', {
+    type: 'boolean',
+    description: 'Perform a dry run without creating a pull request',
     default: false,
   })
   .argv as Arguments;
