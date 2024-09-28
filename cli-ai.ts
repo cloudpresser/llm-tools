@@ -253,7 +253,7 @@ async function main() {
       ['Title', chalk.magenta(argv.title)],
       ['Source Branch', chalk.magenta(sourceBranch)],
       ['Target Branch', chalk.magenta(targetBranch)],
-      ['Description', chalk.magenta(argv.description.slice(0, 50) + (argv.description.length > 50 ? '...' : ''))],
+      ['Description', chalk.magenta(argv.description + (argv.description.length > 50 ? '...' : ''))],
     ];
 
     console.log(chalk.cyan('\nPull Request Details:'));
