@@ -1,126 +1,21 @@
-import yargs from 'yargs';
-import { createPullRequest } from './src/azureDevOpsClient';
-import dotenv from 'dotenv';
-import simpleGit from 'simple-git';
-import OpenAI from 'openai';
-import { Arguments } from 'yargs';
-import { TableUserConfig } from 'table';
-import fs from 'fs/promises';
-import path from 'path';
 import readline from 'readline';
-import { execSync } from 'child_process';
+import path from 'path';
+import yargs from 'yargs';
 import chalk from 'chalk';
-import ora from 'ora';
-import columnify from 'columnify';
-declare module 'columnify';
 import { table } from 'table';
+import ora from 'ora';
+import { createPullRequest } from './src/azureDevOpsClient';
+import { getCurrentBranch } from './src/getCurrentBranch';
+import { getGitDiff } from './src/getGitDiff';
+import { readPRTemplate } from './src/readPRTemplate';
+import { generateWithAI } from './src/generateWithAI';
+import { retrieveRelevantInfo } from './src/retrieveRelevantInfo';
+import { generatePRDescription } from './src/generatePRDescription';
 
-// Custom neon colors
+const neonGreen = chalk.hex('#39FF14');
 const neonBlue = chalk.hex('#00FFFF');
 const neonPink = chalk.hex('#FF00FF');
-const neonPurple = chalk.hex('#800080');
-const neonYellow = chalk.hex('#FFFF00');
 const neonOrange = chalk.hex('#FFA500');
-const neonGreen = chalk.hex('#39FF14');
-
-dotenv.config();
-
-// Initialize OpenAI API
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-async function getCurrentBranch(): Promise<string> {
-  const git = simpleGit();
-  const branchSummary = await git.branch();
-  return branchSummary.current;
-}
-
-async function getGitDiff(): Promise<string> {
-  const git = simpleGit();
-  return git.diff();
-}
-
-async function readPRTemplate(cliPath: string): Promise<string> {
-  const spinner = ora({
-    text: neonBlue('Reading PR template...'),
-    spinner: 'dots',
-    color: 'cyan'
-  }).start();
-
-  try {
-    const templatePath = path.join(cliPath, 'prTemplate.md');
-    const template = await fs.readFile(templatePath, 'utf-8');
-    spinner.succeed(neonPink('PR template read successfully.'));
-    return template;
-  } catch (error) {
-    spinner.fail(neonOrange('Unable to read PR template. Using default template.'));
-    return '## Summary:\n\n## Test Plan:\n\n## Review:';
-  }
-}
-
-async function generateWithAI(prompt: string, gitDiff: string, isMock: boolean): Promise<string> {
-  if (isMock) {
-    return "This is a placeholder response for mock mode.";
-  }
-
-  // Limit git diff size
-  const limitedGitDiff = gitDiff.length > 2000 ? gitDiff.substring(0, 2000) + "..." : gitDiff;
-
-  if (isMock) {
-    return "This is a placeholder response for mock mode.";
-  }
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-4",
-    messages: [
-      { role: "system", content: "You are an AI assistant helping with pull request reviews." },
-      { role: "user", content: `${prompt}\n\nGit Diff:\n${limitedGitDiff}` }
-    ],
-  });
-
-  return response.choices[0].message?.content || '';
-}
-
-async function retrieveRelevantInfo(gitDiff: string): Promise<string> {
-  // Implement RAG logic here
-  // For example, you could search a documentation database or codebase for relevant information
-  // For now, we'll return a placeholder
-  return "Relevant project guidelines and best practices...";
-}
-
-async function generatePRDescription(gitDiff: string, template: string, isMock: boolean): Promise<string> {
-  if (isMock) {
-    const mockSummary = "This is a mock summary for the pull request.";
-    const mockTestPlan = "This is a mock test plan for the pull request.";
-
-    return template
-      .replace('<!-- Please provide enough information so that others can review your pull request. The three fields below are mandatory. -->', '')
-      .replace('<!-- Explain the **motivation** for making this change. What existing problem does the pull request solve? -->', mockSummary)
-      .replace('<!-- Demonstrate the code is solid. Example: How to test the feature in storybook, screenshots / videos if the pull request changes the user interface. The exact commands you ran and their output (for code covered by unit tests) \nFor more details, see: https://gray-smoke-082026a10-docs.centralus.2.azurestaticapps.net/Pull-Request-Policy/PR-Review-Guidelines\n-->', mockTestPlan);
-  }
-
-  if (isMock) {
-    const mockSummary = "This is a mock summary for the pull request.";
-    const mockTestPlan = "This is a mock test plan for the pull request.";
-
-    return template
-      .replace('<!-- Please provide enough information so that others can review your pull request. The three fields below are mandatory. -->', '')
-      .replace('<!-- Explain the **motivation** for making this change. What existing problem does the pull request solve? -->', mockSummary)
-      .replace('<!-- Demonstrate the code is solid. Example: How to test the feature in storybook, screenshots / videos if the pull request changes the user interface. The exact commands you ran and their output (for code covered by unit tests) \nFor more details, see: https://gray-smoke-082026a10-docs.centralus.2.azurestaticapps.net/Pull-Request-Policy/PR-Review-Guidelines\n-->', mockTestPlan);
-  }
-
-  const summaryPrompt = `Generate a concise summary for a pull request based on the given git diff. Include the motivation and problem solved.`;
-  const testPlanPrompt = `Generate a brief test plan for a pull request based on the given git diff. Include key test areas and any specific commands to run.`;
-
-  const summary = await generateWithAI(summaryPrompt, gitDiff, isMock);
-  const testPlan = await generateWithAI(testPlanPrompt, gitDiff, isMock);
-
-  return template
-    .replace('<!-- Please provide enough information so that others can review your pull request. The three fields below are mandatory. -->', '')
-    .replace('<!-- Explain the **motivation** for making this change. What existing problem does the pull request solve? -->', summary)
-    .replace('<!-- Demonstrate the code is solid. Example: How to test the feature in storybook, screenshots / videos if the pull request changes the user interface. The exact commands you ran and their output (for code covered by unit tests) \nFor more details, see: https://gray-smoke-082026a10-docs.centralus.2.azurestaticapps.net/Pull-Request-Policy/PR-Review-Guidelines\n-->', testPlan);
-}
 
 async function main(args: Arguments) {
   const rl = readline.createInterface({
