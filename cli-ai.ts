@@ -10,6 +10,7 @@ import { execSync } from 'child_process';
 import chalk from 'chalk';
 import ora from 'ora';
 import columnify from 'columnify';
+import { table } from 'table';
 
 dotenv.config();
 
@@ -79,12 +80,42 @@ async function generatePRDescription(gitDiff: string, template: string): Promise
 }
 
 async function main() {
-  console.log(chalk.blue('Environment variables:'));
-  console.log(chalk.green('ORGANIZATION:'), process.env.ORGANIZATION || 'Not set');
-  console.log(chalk.green('PROJECT:'), process.env.PROJECT || 'Not set');
-  console.log(chalk.green('REPOSITORY_ID:'), process.env.REPOSITORY_ID || 'Not set');
-  console.log(chalk.green('PERSONAL_ACCESS_TOKEN:'), process.env.PERSONAL_ACCESS_TOKEN ? '[REDACTED]' : 'Not set');
-  console.log(chalk.green('OPENAI_API_KEY:'), process.env.OPENAI_API_KEY ? '[REDACTED]' : 'Not set');
+  const config = {
+    columns: {
+      0: { alignment: 'right', width: 15 },
+      1: { alignment: 'left', width: 50 },
+    },
+    columnDefault: {
+      wrapWord: true,
+    },
+    border: {
+      topBody: chalk.gray('─'),
+      topJoin: chalk.gray('┬'),
+      topLeft: chalk.gray('┌'),
+      topRight: chalk.gray('┐'),
+      bottomBody: chalk.gray('─'),
+      bottomJoin: chalk.gray('┴'),
+      bottomLeft: chalk.gray('└'),
+      bottomRight: chalk.gray('┘'),
+      bodyLeft: chalk.gray('│'),
+      bodyRight: chalk.gray('│'),
+      bodyJoin: chalk.gray('│'),
+      joinBody: chalk.gray('─'),
+      joinLeft: chalk.gray('├'),
+      joinRight: chalk.gray('┤'),
+      joinJoin: chalk.gray('┼'),
+    },
+  };
+
+  console.log(chalk.blue('\nEnvironment Variables:'));
+  const envVars = [
+    ['ORGANIZATION', process.env.ORGANIZATION || 'Not set'],
+    ['PROJECT', process.env.PROJECT || 'Not set'],
+    ['REPOSITORY_ID', process.env.REPOSITORY_ID || 'Not set'],
+    ['PERSONAL_ACCESS_TOKEN', process.env.PERSONAL_ACCESS_TOKEN ? '[REDACTED]' : 'Not set'],
+    ['OPENAI_API_KEY', process.env.OPENAI_API_KEY ? '[REDACTED]' : 'Not set'],
+  ];
+  console.log(table(envVars, config));
 
   const argv = await yargs(process.argv.slice(2))
     .option('organization', {
@@ -130,14 +161,17 @@ async function main() {
     throw new Error('Error: OpenAI API Key is not set in the .env file or provided as an argument.');
   }
 
-  console.log(chalk.blue('Evaluated CLI arguments:'));
-  console.log(chalk.green('ORGANIZATION:'), argv.organization || 'Not set');
-  console.log(chalk.green('PROJECT:'), argv.project || 'Not set');
-  console.log(chalk.green('REPOSITORY_ID:'), argv.repositoryId || 'Not set');
-  console.log(chalk.green('TITLE:'), argv.title || 'Not set (will be generated)');
-  console.log(chalk.green('DESCRIPTION:'), argv.description || 'Not set (will be generated)');
-  console.log(chalk.green('PERSONAL_ACCESS_TOKEN:'), argv.personalAccessToken ? '[REDACTED]' : 'Not set');
-  console.log(chalk.green('OPENAI_API_KEY:'), argv.openaiApiKey ? '[REDACTED]' : 'Not set');
+  console.log(chalk.blue('\nEvaluated CLI Arguments:'));
+  const cliArgs = [
+    ['ORGANIZATION', argv.organization || 'Not set'],
+    ['PROJECT', argv.project || 'Not set'],
+    ['REPOSITORY_ID', argv.repositoryId || 'Not set'],
+    ['TITLE', argv.title || 'Not set (will be generated)'],
+    ['DESCRIPTION', argv.description || 'Not set (will be generated)'],
+    ['PERSONAL_ACCESS_TOKEN', argv.personalAccessToken ? '[REDACTED]' : 'Not set'],
+    ['OPENAI_API_KEY', argv.openaiApiKey ? '[REDACTED]' : 'Not set'],
+  ];
+  console.log(table(cliArgs, config));
 
   try {
     const spinner = ora('Fetching git diff...').start();
@@ -215,14 +249,15 @@ async function main() {
       output: process.stdout
     });
 
-    const prDetails = {
-      'Title': argv.title,
-      'Source Branch': sourceBranch,
-      'Target Branch': targetBranch,
-      'Description': argv.description.slice(0,25),
-    };
+    const prDetails = [
+      ['Title', argv.title],
+      ['Source Branch', sourceBranch],
+      ['Target Branch', targetBranch],
+      ['Description', argv.description.slice(0, 50) + (argv.description.length > 50 ? '...' : '')],
+    ];
 
-    console.log(columnify(prDetails, { columnSplitter: ' | ' }));
+    console.log(chalk.cyan('\nPull Request Details:'));
+    console.log(table(prDetails, config));
 
     const confirm = await new Promise<string>(resolve => {
       rl.question('Do you want to create this pull request? (y/n) ', resolve);
@@ -260,9 +295,17 @@ async function main() {
     console.log(chalk.green('Pull request created successfully:'));
     
 
-    console.log(columnify({...prDetails,'Pull Request ID': pullRequestId,
-      'Description': argv.description.slice(0,25),
-      'View PR': `https://dev.azure.com/${argv.organization}/${argv.project}/_git/${argv.repositoryId}/pullrequest/${pullRequestId}`}, { columnSplitter: ' | ' }));
+    const finalPrDetails = [
+      ['Title', argv.title],
+      ['Source Branch', sourceBranch],
+      ['Target Branch', targetBranch],
+      ['Description', argv.description.slice(0, 50) + (argv.description.length > 50 ? '...' : '')],
+      ['Pull Request ID', pullRequestId.toString()],
+      ['View PR', chalk.blue(`https://dev.azure.com/${argv.organization}/${argv.project}/_git/${argv.repositoryId}/pullrequest/${pullRequestId}`)],
+    ];
+
+    console.log(chalk.green('\nPull Request Created Successfully:'));
+    console.log(table(finalPrDetails, config));
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.log(chalk.red('Error creating pull request:'), error.message);
