@@ -14,13 +14,18 @@ import { generatePRDescription } from './src/generatePRDescription';
 
 dotenv.config();
 
+const neonGreen = chalk.hex('#39FF14');
+const neonBlue = chalk.hex('#00FFFF');
+const neonPink = chalk.hex('#FF00FF');
+const neonOrange = chalk.hex('#FFA500');
+
 async function main() {
-  console.log(chalk.blue('Environment variables:'));
+  console.log(neonGreen('\nEnvironment Variables:'));
   const envVars: [string, string][] = [
-    ['ORGANIZATION', process.env.ORGANIZATION || 'Not set'],
-    ['PROJECT', process.env.PROJECT || 'Not set'],
-    ['REPOSITORY_ID', process.env.REPOSITORY_ID || 'Not set'],
-    ['PERSONAL_ACCESS_TOKEN', process.env.PERSONAL_ACCESS_TOKEN ? '[REDACTED]' : 'Not set'],
+    ['ORGANIZATION', neonPink(process.env.ORGANIZATION || 'Not set')],
+    ['PROJECT', neonPink(process.env.PROJECT || 'Not set')],
+    ['REPOSITORY_ID', neonPink(process.env.REPOSITORY_ID || 'Not set')],
+    ['PERSONAL_ACCESS_TOKEN', neonPink((process.env.PERSONAL_ACCESS_TOKEN || 'Not set').substring(0, 10) + '...')],
   ];
   console.log(createConfiguredTable(envVars));
 
@@ -66,14 +71,14 @@ async function main() {
     throw new Error('Error: Personal Access Token is not set in the .env file or provided as an argument.');
   }
 
-  console.log(chalk.blue('Evaluated CLI arguments:'));
+  console.log(neonGreen('\nEvaluated CLI Arguments:'));
   const cliArgs: [string, string][] = [
-    ['ORGANIZATION', argv.organization || 'Not set'],
-    ['PROJECT', argv.project || 'Not set'],
-    ['REPOSITORY_ID', argv.repositoryId || 'Not set'],
-    ['TITLE', argv.title],
-    ['DESCRIPTION', argv.description],
-    ['PERSONAL_ACCESS_TOKEN', argv.personalAccessToken ? '[REDACTED]' : 'Not set'],
+    ['ORGANIZATION', neonPink(argv.organization || 'Not set')],
+    ['PROJECT', neonPink(argv.project || 'Not set')],
+    ['REPOSITORY_ID', neonPink(argv.repositoryId || 'Not set')],
+    ['TITLE', neonPink(argv.title)],
+    ['DESCRIPTION', neonPink(argv.description)],
+    ['PERSONAL_ACCESS_TOKEN', neonPink((argv.personalAccessToken || 'Not set').substring(0, 10) + '...')],
   ];
   console.log(createConfiguredTable(cliArgs));
 
@@ -84,11 +89,11 @@ async function main() {
     color: 'cyan'
   }).start();
   const gitDiff = await getGitDiff();
-  spinner.succeed(chalk.green('Git diff fetched.'));
+  spinner.succeed(neonPink('Git diff fetched.'));
 
   spinner.start(chalk.blue('Getting current branch...'));
   const sourceBranch = await getCurrentBranch();
-  spinner.succeed(chalk.green('Current branch obtained.'));
+  spinner.succeed(neonPink('Current branch obtained.'));
   const defaultTargetBranch = 'main'; // Assuming 'main' is your default target branch
   const targetBranch = sourceBranch === defaultTargetBranch ? 'develop' : defaultTargetBranch;
 
@@ -98,28 +103,28 @@ async function main() {
 
   if (!argv.title) {
     const titleSpinner = ora({
-      text: chalk.blue('Generating pull request title...'),
+      text: neonBlue('Generating pull request title...'),
       spinner: 'dots',
       color: 'cyan'
     }).start();
     argv.title = await generateWithAI("Generate a concise and descriptive pull request title based on the following git diff:", gitDiff, false);
-    titleSpinner.succeed(chalk.green('Pull request title generated.'));
+    titleSpinner.succeed(neonPink('Pull request title generated.'));
   }
 
   if (!argv.description) {
     const descriptionSpinner = ora({
-      text: chalk.blue('Generating pull request description...'),
+      text: neonBlue('Generating pull request description...'),
       spinner: 'dots',
       color: 'cyan'
     }).start();
     const prTemplate = await readPRTemplate(path.dirname(__filename));
     argv.description = await generatePRDescription(gitDiff, prTemplate, false);
-    descriptionSpinner.succeed(chalk.green('Pull request description generated.'));
+    descriptionSpinner.succeed(neonPink('Pull request description generated.'));
   }
 
   let pullRequestId = 'dry-run-id';
   if (argv.dryRun) {
-    console.log(chalk.yellow('Dry-run mode enabled. No actual request to Azure DevOps will be made.'));
+    console.log(neonGreen('Dry run mode enabled. No pull request will be created.'));
   } else {
     pullRequestId = await createPullRequest({
       organization: argv.organization || '',
@@ -148,13 +153,13 @@ async function main() {
   ];
 
   if (argv.dryRun) {
-    console.log(chalk.blue('Dry-run mode: Pull request details:'));
+    console.log(neonGreen('Dry-run mode: Pull request details:'));
   } else {
-    console.log(chalk.blue('Pull request created successfully:'));
+    console.log(neonGreen('Pull request created successfully:'));
   }
   console.log(createConfiguredTable(prDetails));
 }
 
 main().catch((error) => {
-  console.log(chalk.red('Unhandled error in main:'), error);
+  console.log(neonGreen('Unhandled error in main:'), error);
 });
