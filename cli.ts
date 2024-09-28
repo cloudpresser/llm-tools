@@ -17,7 +17,6 @@ dotenv.config();
 const neonGreen = chalk.hex('#39FF14');
 const neonBlue = chalk.hex('#00FFFF');
 const neonPink = chalk.hex('#FF00FF');
-const neonOrange = chalk.hex('#FFA500');
 
 async function main() {
   console.log(neonGreen('\nEnvironment Variables:'));

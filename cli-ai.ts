@@ -9,45 +9,17 @@ import { getCurrentBranch } from './src/getCurrentBranch';
 import { getGitDiff } from './src/getGitDiff';
 import { readPRTemplate } from './src/readPRTemplate';
 import { generateWithAI } from './src/generateWithAI';
-import { retrieveRelevantInfo } from './src/retrieveRelevantInfo';
 import { generatePRDescription } from './src/generatePRDescription';
 
 const neonGreen = chalk.hex('#39FF14');
 const neonBlue = chalk.hex('#00FFFF');
 const neonPink = chalk.hex('#FF00FF');
-const neonOrange = chalk.hex('#FFA500');
 
 async function main(args: Arguments) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
   });
-  const config: TableUserConfig = {
-    columns: {
-      0: { alignment: 'right', width: 15 },
-      1: { alignment: 'left', width: 50 },
-    },
-    columnDefault: {
-      wrapWord: true,
-    },
-    border: {
-      topBody: neonBlue('─'),
-      topJoin: neonBlue('┬'),
-      topLeft: neonBlue('┌'),
-      topRight: neonBlue('┐'),
-      bottomBody: neonBlue('─'),
-      bottomJoin: neonBlue('┴'),
-      bottomLeft: neonBlue('└'),
-      bottomRight: neonBlue('┘'),
-      bodyLeft: neonBlue('│'),
-      bodyRight: neonBlue('│'),
-      bodyJoin: neonBlue('│'),
-      joinBody: neonBlue('─'),
-      joinLeft: neonBlue('├'),
-      joinRight: neonBlue('┤'),
-      joinJoin: neonBlue('┼'),
-    },
-  };
 
   const cliArgs = await yargs(process.argv.slice(2))
 
