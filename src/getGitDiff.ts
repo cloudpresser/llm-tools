@@ -1,10 +1,11 @@
 import simpleGit from 'simple-git';
 import { summarizeDiff } from './summarizeDiff';
-import { loadEnv } from './loadEnv';
+import { getConfig } from './config';
 
-const env = loadEnv();
+
 
 export async function getGitDiff(): Promise<{ diff: string; summary: string }> {
+  const config = await getConfig();
   const git = simpleGit();
   try {
     // Get the current branch name
@@ -12,7 +13,13 @@ export async function getGitDiff(): Promise<{ diff: string; summary: string }> {
     console.log(`Current branch: ${currentBranch}`);
     
     // Get the merge base between the current branch and target branch
-    const mergeBase = await git.raw(['merge-base', env.TARGET_BRANCH, currentBranch]);
+    const mergeBase = await git.raw(['merge-base', config.targetBranch, currentBranch]);
+    
+    if (!mergeBase.trim()) {
+      console.log('No merge base found. This might be a new branch with no common ancestor.');
+      return { diff: '', summary: 'No changes detected or new branch with no common ancestor.' };
+    }
+    
     console.log(`Merge base: ${mergeBase.trim()}`);
     
     // Get the diff between the merge base and the current branch

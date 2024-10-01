@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { loadEnv } from './loadEnv';
+import { getConfig } from './config';
 
 interface WorkItem {
   id: number;
@@ -17,19 +17,19 @@ interface PullRequestParams {
   personalAccessToken?: string;
 }
 
-const env = loadEnv();
+const config = getConfig();
 
 async function createPullRequest(params: PullRequestParams): Promise<number> {
   const {
-    organization = env.ORGANIZATION,
-    project = env.PROJECT,
-    repositoryId = env.REPOSITORY_ID,
+    organization = config.organization,
+    project = config.project,
+    repositoryId = config.repositoryId,
     title,
     description,
     workItems,
     targetBranch,
     sourceBranch,
-    personalAccessToken = env.PERSONAL_ACCESS_TOKEN,
+    personalAccessToken = config.personalAccessToken,
   } = params;
 
   if (!organization || !project || !repositoryId || !personalAccessToken) {

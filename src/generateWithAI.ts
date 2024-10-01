@@ -1,18 +1,20 @@
 import OpenAI from 'openai';
-import { loadEnv } from './loadEnv';
+import { getConfig } from './config';
 
-const env = loadEnv();
+
+
+export async function generateWithAI(prompt: string, gitDiff: string, isSummary: boolean, isMock: boolean): Promise<string> {
+  const config = await getConfig();
 const openai = new OpenAI({
-  apiKey: env.OPENAI_API_KEY,
+  apiKey: config.openaiApiKey,
 });
-
-export async function generateWithAI(prompt: string, gitDiff: string, isSummary: boolean ,isMock: boolean): Promise<string> {
   if (isMock) {
     return "This is a placeholder response for mock mode.";
   }
 
-  if (!env.OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY is not set in the environment');
+  const openaiApiKey = config.openaiApiKey;
+  if (!openaiApiKey) {
+    throw new Error('OPENAI_API_KEY is not set in the configuration');
   }
 
 

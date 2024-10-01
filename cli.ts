@@ -12,7 +12,7 @@ import { getGitDiff } from './src/getGitDiff';
 import { readPRTemplate } from './src/readPRTemplate';
 import { generateWithAI } from './src/generateWithAI';
 import { generatePRDescription } from './src/generatePRDescription';
-import { loadEnv } from './src/loadEnv';
+import { getConfig } from './src/config';
 
 dotenv.config();
 
@@ -20,33 +20,34 @@ const neonGreen = chalk.hex('#39FF14');
 const neonBlue = chalk.hex('#00FFFF');
 const neonPink = chalk.hex('#FF00FF');
 
-const env = loadEnv()
+
 
 async function main() {
-  console.log(neonGreen('\nEnvironment Variables:'));
-  const envVars: [string, string][] = [
-    ['ORGANIZATION', neonPink(env.ORGANIZATION || 'Not set')],
-    ['PROJECT', neonPink(env.PROJECT || 'Not set')],
-    ['REPOSITORY_ID', neonPink(env.REPOSITORY_ID || 'Not set')],
-    ['PERSONAL_ACCESS_TOKEN', neonPink((env.PERSONAL_ACCESS_TOKEN || 'Not set').substring(0, 10) + '...')],
+  console.log(neonGreen('\nConfiguration:'));
+  const config = await getConfig();
+  const configVars: [string, string][] = [
+    ['ORGANIZATION', neonPink(config.organization || 'Not set')],
+    ['PROJECT', neonPink(config.project || 'Not set')],
+    ['REPOSITORY_ID', neonPink(config.repositoryId || 'Not set')],
+    ['PERSONAL_ACCESS_TOKEN', neonPink((config.personalAccessToken || 'Not set').substring(0, 10) + '...')],
   ];
-  console.log(createConfiguredTable(envVars));
+  console.log(createConfiguredTable(configVars));
 
   const argv = await yargs(process.argv.slice(2))
     .option('organization', {
       type: 'string',
       description: 'Azure DevOps organization name',
-      default: env.ORGANIZATION,
+      default: config.organization,
     })
     .option('project', {
       type: 'string',
       description: 'Project name',
-      default: env.PROJECT,
+      default: config.project,
     })
     .option('repositoryId', {
       type: 'string',
       description: 'Repository ID',
-      default: env.REPOSITORY_ID,
+      default: config.repositoryId,
     })
     .option('title', {
       type: 'string',
@@ -61,17 +62,17 @@ async function main() {
     .option('personalAccessToken', {
       type: 'string',
       description: 'Azure DevOps personal access token',
-      default: env.PERSONAL_ACCESS_TOKEN,
+      default: config.personalAccessToken,
     })
     .option('dryRun', {
       type: 'boolean',
       description: 'Run the script in dry-run mode (no actual request to Azure DevOps)',
-      default: false,
+      default: config.dryRun,
     })
     .parse();
 
-  if (!env.PERSONAL_ACCESS_TOKEN && !argv.personalAccessToken) {
-    throw new Error('Error: Personal Access Token is not set in the .env file or provided as an argument.');
+  if (!config.personalAccessToken && !argv.personalAccessToken) {
+    throw new Error('Error: Personal Access Token is not set in the configuration or provided as an argument.');
   }
 
   console.log(neonGreen('\nEvaluated CLI Arguments:'));
@@ -98,7 +99,7 @@ async function main() {
   const sourceBranch = await getCurrentBranch();
   spinner.succeed(neonPink('Current branch obtained.'));
   const defaultTargetBranch = 'main'; // Assuming 'main' is your default target branch
-  const targetBranch = sourceBranch === defaultTargetBranch ? 'develop' : defaultTargetBranch;
+  const targetBranch = config.targetBranch ? config.targetBranch : (sourceBranch === defaultTargetBranch ? 'develop' : defaultTargetBranch)
 
   if (sourceBranch === targetBranch) {
     throw new Error('Source and target branches cannot be the same. Please make sure you are not on the main branch.');

@@ -1,13 +1,13 @@
 import OpenAI from 'openai';
+import { getConfig } from './config';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+
 
 const BATCH_SIZE = 7500; // Characters per batch
 const MAX_PARALLEL_REQUESTS = 3; // Maximum number of parallel requests
 
 export async function summarizeDiff(diff: string): Promise<string> {
+
   console.log('Received diff in summarizeDiff:');
   // console.log(diff);
 
@@ -44,7 +44,21 @@ async function processBatchesInParallel(batches: string[]): Promise<string[]> {
   return summaries;
 }
 
+let openai: OpenAI | null = null;
+
+const getOpenAiSingleton = async () => {
+  if (!openai) {
+    const config = await getConfig();
+    openai = new OpenAI({
+      apiKey: config.openaiApiKey,
+    });
+  }
+  return openai as OpenAI;
+}
+
 async function processBatch(batchDiff: string): Promise<string> {
+  const openai = await getOpenAiSingleton();
+  
   const prompt = `
 Analyze the following part of a git diff and provide a concise summary. Focus on:
 
