@@ -6,7 +6,7 @@ const openai = new OpenAI({
   apiKey: env.OPENAI_API_KEY,
 });
 
-export async function generateWithAI(prompt: string, gitDiff: string, isMock: boolean): Promise<string> {
+export async function generateWithAI(prompt: string, gitDiff: string, isSummary: boolean ,isMock: boolean): Promise<string> {
   if (isMock) {
     return "This is a placeholder response for mock mode.";
   }
@@ -15,15 +15,15 @@ export async function generateWithAI(prompt: string, gitDiff: string, isMock: bo
     throw new Error('OPENAI_API_KEY is not set in the environment');
   }
 
-  // Limit git diff size
-  const limitedGitDiff = gitDiff.length > 2000 ? gitDiff.substring(0, 2000) + "..." : gitDiff;
 
   const response = await openai.chat.completions.create({
     model: "gpt-4",
     messages: [
       { role: "system", content: "You are an AI assistant helping with pull request reviews." },
-      { role: "user", content: `${prompt}\n\nGit Diff:\n${limitedGitDiff}` }
+      { role: "user", content: `${prompt}\n\nGit Diff Summary:\n${gitDiff}` }
     ],
+    max_tokens: 1000,
+    temperature: 0.7,
   });
 
   return response.choices[0].message?.content || '';

@@ -85,15 +85,15 @@ async function main(args: Arguments) {
     }).start();
     const gitDiff = await getGitDiff();
     spinner.succeed(neonPink('Git diff fetched.'));
-
+    console.log(gitDiff)
     // Add this log to check the git diff content
-    console.log(neonGreen(`Git diff length: ${gitDiff.length} characters`));
+    console.log(neonGreen(`Git diff length: ${gitDiff.diff.length} characters`));
 
     spinner.start(neonBlue('Getting current branch...'));
     const sourceBranch = await getCurrentBranch();
     spinner.succeed(neonPink('Current branch obtained.'));
-    const defaultTargetBranch = 'main'; // Assuming 'main' is your default target branch
-    const targetBranch = sourceBranch === defaultTargetBranch ? 'develop' : defaultTargetBranch;
+    const defaultTargetBranch = 'staging'; 
+    const targetBranch = env.TARGET_BRANCH? env.TARGET_BRANCH : sourceBranch === defaultTargetBranch ? 'develop' : defaultTargetBranch;
 
     if (sourceBranch === targetBranch) {
       throw new Error('Source and target branches cannot be the same. Please make sure you are not on the main branch.');
@@ -112,7 +112,7 @@ async function main(args: Arguments) {
       
       args.title = args.mock
         ? "Mock Pull Request Title"
-        : await generateWithAI(titlePrompt, gitDiff || "No changes detected", args.mock as boolean);
+        : await generateWithAI(titlePrompt, gitDiff.summary || "No changes detected", true, args.mock as boolean);
       titleSpinner.succeed(neonPink('Pull request title generated.'));
     }
 
@@ -126,7 +126,7 @@ async function main(args: Arguments) {
       // Modify this part to handle empty gitDiff
       args.description = args.mock
         ? "This is a mock description for the pull request."
-        : await generatePRDescription(gitDiff || "No changes detected", prTemplate, args.mock as boolean);
+        : await generatePRDescription(gitDiff.summary || "No changes detected", prTemplate, true, args.mock as boolean);
       descriptionSpinner.succeed(neonPink('Pull request description generated.'));
     }
 

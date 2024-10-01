@@ -39,5 +39,7 @@ export function loadEnv(config: EnvConfig = { fs, path, dotenv, process }): Reco
     }
   }
 
+  console.log('Loaded env:', loadedEnv);
+  console.log('Process env:', config.process.env);
   return { ...loadedEnv, ...config.process.env } as Record<string, string>;
 }

@@ -110,7 +110,7 @@ async function main() {
       spinner: 'dots',
       color: 'cyan'
     }).start();
-    argv.title = await generateWithAI("Generate a concise and descriptive pull request title based on the following git diff:", gitDiff, false);
+    argv.title = await generateWithAI("Generate a concise and descriptive pull request title based on the following git diff:", gitDiff.summary, true, false);
     titleSpinner.succeed(neonPink('Pull request title generated.'));
   }
 
@@ -121,7 +121,7 @@ async function main() {
       color: 'cyan'
     }).start();
     const prTemplate = await readPRTemplate(path.dirname(__filename));
-    argv.description = await generatePRDescription(gitDiff, prTemplate, false);
+    argv.description = await generatePRDescription(gitDiff.summary, prTemplate, true ,false);
     descriptionSpinner.succeed(neonPink('Pull request description generated.'));
   }
 

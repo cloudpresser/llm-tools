@@ -31,7 +31,7 @@
     "columnify": "^1.6.0",
     "dotenv": "^16.4.5",
     "inquirer": "8.2.4",
-    "openai": "^4.65.0",
+    "openai": "^4.0.0",
     "ora": "^8.1.0",
     "pretty-cli": "^0.0.14",
     "simple-git": "^3.27.0",
