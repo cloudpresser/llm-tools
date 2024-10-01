@@ -1,12 +1,18 @@
 import OpenAI from 'openai';
+import { loadEnv } from './loadEnv';
 
+const env = loadEnv();
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: env.OPENAI_API_KEY,
 });
 
 export async function generateWithAI(prompt: string, gitDiff: string, isMock: boolean): Promise<string> {
   if (isMock) {
     return "This is a placeholder response for mock mode.";
+  }
+
+  if (!env.OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY is not set in the environment');
   }
 
   // Limit git diff size

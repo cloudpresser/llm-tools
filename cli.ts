@@ -12,6 +12,7 @@ import { getGitDiff } from './src/getGitDiff';
 import { readPRTemplate } from './src/readPRTemplate';
 import { generateWithAI } from './src/generateWithAI';
 import { generatePRDescription } from './src/generatePRDescription';
+import { loadEnv } from './src/loadEnv';
 
 dotenv.config();
 
@@ -19,13 +20,15 @@ const neonGreen = chalk.hex('#39FF14');
 const neonBlue = chalk.hex('#00FFFF');
 const neonPink = chalk.hex('#FF00FF');
 
+const env = loadEnv()
+
 async function main() {
   console.log(neonGreen('\nEnvironment Variables:'));
   const envVars: [string, string][] = [
-    ['ORGANIZATION', neonPink(process.env.ORGANIZATION || 'Not set')],
-    ['PROJECT', neonPink(process.env.PROJECT || 'Not set')],
-    ['REPOSITORY_ID', neonPink(process.env.REPOSITORY_ID || 'Not set')],
-    ['PERSONAL_ACCESS_TOKEN', neonPink((process.env.PERSONAL_ACCESS_TOKEN || 'Not set').substring(0, 10) + '...')],
+    ['ORGANIZATION', neonPink(env.ORGANIZATION || 'Not set')],
+    ['PROJECT', neonPink(env.PROJECT || 'Not set')],
+    ['REPOSITORY_ID', neonPink(env.REPOSITORY_ID || 'Not set')],
+    ['PERSONAL_ACCESS_TOKEN', neonPink((env.PERSONAL_ACCESS_TOKEN || 'Not set').substring(0, 10) + '...')],
   ];
   console.log(createConfiguredTable(envVars));
 
@@ -33,17 +36,17 @@ async function main() {
     .option('organization', {
       type: 'string',
       description: 'Azure DevOps organization name',
-      default: process.env.ORGANIZATION,
+      default: env.ORGANIZATION,
     })
     .option('project', {
       type: 'string',
       description: 'Project name',
-      default: process.env.PROJECT,
+      default: env.PROJECT,
     })
     .option('repositoryId', {
       type: 'string',
       description: 'Repository ID',
-      default: process.env.REPOSITORY_ID,
+      default: env.REPOSITORY_ID,
     })
     .option('title', {
       type: 'string',
@@ -58,7 +61,7 @@ async function main() {
     .option('personalAccessToken', {
       type: 'string',
       description: 'Azure DevOps personal access token',
-      default: process.env.PERSONAL_ACCESS_TOKEN,
+      default: env.PERSONAL_ACCESS_TOKEN,
     })
     .option('dryRun', {
       type: 'boolean',
@@ -67,7 +70,7 @@ async function main() {
     })
     .parse();
 
-  if (!process.env.PERSONAL_ACCESS_TOKEN && !argv.personalAccessToken) {
+  if (!env.PERSONAL_ACCESS_TOKEN && !argv.personalAccessToken) {
     throw new Error('Error: Personal Access Token is not set in the .env file or provided as an argument.');
   }
 

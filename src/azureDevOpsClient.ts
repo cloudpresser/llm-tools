@@ -1,33 +1,40 @@
 import axios from 'axios';
+import { loadEnv } from './loadEnv';
 
 interface WorkItem {
   id: number;
 }
 
 interface PullRequestParams {
-  organization: string;
-  project: string;
-  repositoryId: string;
+  organization?: string;
+  project?: string;
+  repositoryId?: string;
   title: string;
   description: string;
   workItems: WorkItem[];
   targetBranch: string;
   sourceBranch: string;
-  personalAccessToken: string;
+  personalAccessToken?: string;
 }
+
+const env = loadEnv();
 
 async function createPullRequest(params: PullRequestParams): Promise<number> {
   const {
-    organization,
-    project,
-    repositoryId,
+    organization = env.ORGANIZATION,
+    project = env.PROJECT,
+    repositoryId = env.REPOSITORY_ID,
     title,
     description,
     workItems,
     targetBranch,
     sourceBranch,
-    personalAccessToken,
+    personalAccessToken = env.PERSONAL_ACCESS_TOKEN,
   } = params;
+
+  if (!organization || !project || !repositoryId || !personalAccessToken) {
+    throw new Error('Missing required parameters. Please check your environment variables or provided parameters.');
+  }
   const apiVersion = '6.0';
   const baseUrl = `https://dev.azure.com/${organization}/${project}/_apis/git/repositories/${repositoryId}`;
 
@@ -56,7 +63,7 @@ async function createPullRequest(params: PullRequestParams): Promise<number> {
       console.log('Pull Request created successfully:');
       console.log(`ID: ${response.data.pullRequestId}`);
       console.log(`Status: ${response.data.status}`);
-      console.log(`Created By: ${response.data.createdBy.displayName}`);
+      console.log(`Created By: ${response.data.createdBy?.displayName || 'Unknown'}`);
       console.log(`Creation Date: ${response.data.creationDate}`);
       console.log(`URL: ${response.data.url}`);
       return response.data.pullRequestId;
@@ -75,8 +82,10 @@ async function createPullRequest(params: PullRequestParams): Promise<number> {
         ? error.response.data.message
         : error.message;
       throw new Error(`API Error: ${errorMessage}`);
+    } else if (error instanceof Error) {
+      throw new Error(`API Error: ${error.message}`);
     } else {
-      throw new Error('Unexpected error occurred');
+      throw new Error('API Error: Unexpected error occurred');
     }
   }
 }
