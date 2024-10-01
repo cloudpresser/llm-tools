@@ -5,7 +5,7 @@
   "main": "dist/azureDevOpsClient.js",
   "types": "dist/azureDevOpsClient.d.ts",
   "bin": {
-    "start-ai": "./cli-ai.ts"
+    "create-pr": "npx tsx ./cli-ai.ts"
   },
   "scripts": {
     "build": "tsc",
