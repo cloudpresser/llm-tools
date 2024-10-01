@@ -30,7 +30,7 @@ describe('createPullRequest', () => {
       expect.objectContaining({
         sourceRefName: 'refs/heads/feature',
         targetRefName: 'refs/heads/main',
-        title: 'Merge feature into main',
+        title: 'Test PR',
         description: 'Test PR',
         workItemRefs: [{ id: 1 }, { id: 2 }]
       }),
