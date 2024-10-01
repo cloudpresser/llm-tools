@@ -12,6 +12,7 @@ import { getGitDiff } from './src/getGitDiff';
 import { readPRTemplate } from './src/readPRTemplate';
 import { generateWithAI } from './src/generateWithAI';
 import { generatePRDescription } from './src/generatePRDescription';
+import { loadEnv } from './src/loadEnv';
 
 const neonGreen = chalk.hex('#39FF14');
 const neonOrange = chalk.hex('#FFA500');
@@ -30,7 +31,13 @@ interface Arguments {
   dryRun?: boolean;
 }
 
+const env = loadEnv();
+
 async function main(args: Arguments) {
+  console.log('Starting main function');
+  // Load environment variables
+  console.log('Environment variables loaded');
+
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
@@ -40,20 +47,20 @@ async function main(args: Arguments) {
 
   console.log(neonGreen('\nEnvironment Variables:'));
   const envVars: [string, string][] = [
-    ['ORGANIZATION', neonPink(process.env.ORGANIZATION || 'Not set')],
-    ['PROJECT', neonPink(process.env.PROJECT || 'Not set')],
-    ['REPOSITORY_ID', neonPink(process.env.REPOSITORY_ID || 'Not set')],
-    ['PERSONAL_ACCESS_TOKEN', neonPink((process.env.PERSONAL_ACCESS_TOKEN || 'Not set').substring(0, 10) + '...')],
-    ['OPENAI_API_KEY', neonPink((process.env.OPENAI_API_KEY || 'Not set').substring(0, 10) + '...')],
+    ['ORGANIZATION', neonPink(env.ORGANIZATION || 'Not set')],
+    ['PROJECT', neonPink(env.PROJECT || 'Not set')],
+    ['REPOSITORY_ID', neonPink(env.REPOSITORY_ID || 'Not set')],
+    ['PERSONAL_ACCESS_TOKEN', neonPink((env.PERSONAL_ACCESS_TOKEN || 'Not set').substring(0, 10) + '...')],
+    ['OPENAI_API_KEY', neonPink((env.OPENAI_API_KEY || 'Not set').substring(0, 10) + '...')],
     
   ];
   console.log(createConfiguredTable(envVars));
 
-  if (!process.env.PERSONAL_ACCESS_TOKEN && !args.personalAccessToken) {
+  if (!env.PERSONAL_ACCESS_TOKEN && !args.personalAccessToken) {
     throw new Error('Error: Personal Access Token is not set in the .env file or provided as an argument.');
   }
 
-  if (!process.env.OPENAI_API_KEY && !args.openaiApiKey) {
+  if (!env.OPENAI_API_KEY && !args.openaiApiKey) {
     throw new Error('Error: OpenAI API Key is not set in the .env file or provided as an argument.');
   }
 
@@ -79,6 +86,9 @@ async function main(args: Arguments) {
     const gitDiff = await getGitDiff();
     spinner.succeed(neonPink('Git diff fetched.'));
 
+    // Add this log to check the git diff content
+    console.log(neonGreen(`Git diff length: ${gitDiff.length} characters`));
+
     spinner.start(neonBlue('Getting current branch...'));
     const sourceBranch = await getCurrentBranch();
     spinner.succeed(neonPink('Current branch obtained.'));
@@ -95,9 +105,14 @@ async function main(args: Arguments) {
         spinner: 'dots',
         color: 'cyan'
       }).start();
+      // Modify this part to provide a fallback message if gitDiff is empty
+      const titlePrompt = gitDiff 
+        ? "Generate a concise and descriptive pull request title based on the following git diff:"
+        : "Generate a generic pull request title as no changes were detected.";
+      
       args.title = args.mock
         ? "Mock Pull Request Title"
-        : await generateWithAI("Generate a concise and descriptive pull request title based on the following git diff:", gitDiff, args.mock as boolean);
+        : await generateWithAI(titlePrompt, gitDiff || "No changes detected", args.mock as boolean);
       titleSpinner.succeed(neonPink('Pull request title generated.'));
     }
 
@@ -108,9 +123,10 @@ async function main(args: Arguments) {
         color: 'cyan'
       }).start();
       const prTemplate = await readPRTemplate(path.dirname(__filename));
+      // Modify this part to handle empty gitDiff
       args.description = args.mock
         ? "This is a mock description for the pull request."
-        : await generatePRDescription(gitDiff, prTemplate, args.mock as boolean);
+        : await generatePRDescription(gitDiff || "No changes detected", prTemplate, args.mock as boolean);
       descriptionSpinner.succeed(neonPink('Pull request description generated.'));
     }
 
