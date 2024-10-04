@@ -8,8 +8,8 @@ const MAX_PARALLEL_REQUESTS = 3; // Maximum number of parallel requests
 
 export async function summarizeDiff(diff: string): Promise<string> {
 
-  console.log('Received diff in summarizeDiff:');
-  // console.log(diff);
+  const config = await getConfig();
+  config.debug && console.log('Received diff in summarizeDiff:', diff);
 
   if (!diff) {
     console.log('Empty diff received in summarizeDiff');

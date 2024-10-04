@@ -1,8 +1,11 @@
 import { generateWithAI } from './generateWithAI';
+import { getConfig } from './config';
 
-export async function generatePRDescription(gitDiff: string, template: string, isSummary: boolean,isMock: boolean): Promise<string> {
+export async function generatePRDescription(gitDiff: string, template: string, isSummary: boolean, isMock: boolean): Promise<string> {
+  const config = await getConfig();
+
   if (isMock) {
-    const mockSummary = "This is a mock summary for the pull request.";
+    const mockSummary = `This is a mock summary for the pull request. User prompt: ${config.userPrompt}`;
     const mockTestPlan = "This is a mock test plan for the pull request.";
 
     return template

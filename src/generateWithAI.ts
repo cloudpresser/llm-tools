@@ -5,9 +5,9 @@ import { getConfig } from './config';
 
 export async function generateWithAI(prompt: string, gitDiff: string, isSummary: boolean, isMock: boolean): Promise<string> {
   const config = await getConfig();
-const openai = new OpenAI({
-  apiKey: config.openaiApiKey,
-});
+  const openai = new OpenAI({
+    apiKey: config.openaiApiKey,
+  });
   if (isMock) {
     return "This is a placeholder response for mock mode.";
   }

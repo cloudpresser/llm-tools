@@ -19,6 +19,8 @@ export interface Config {
   targetBranch: string;
   sourceBranch: string;
   workItems: WorkItem[];
+  userPrompt?: string;
+  debug: boolean;
 }
 
 function getCliArgs(): Partial<Config> {
@@ -35,6 +37,8 @@ function getCliArgs(): Partial<Config> {
     .option('targetBranch', { type: 'string' })
     .option('sourceBranch', { type: 'string' })
     .option('workItems', { type: 'array' })
+    .option('userPrompt', { type: 'string' })
+    .option('debug', { type: 'boolean', default: false })
     .argv as Partial<Config>;
 }
 
@@ -58,6 +62,8 @@ export async function getConfig(): Promise<Config> {
     targetBranch: cliArgs.targetBranch || env.TARGET_BRANCH || (currentBranch === defaultTargetBranch ? 'develop' : defaultTargetBranch),
     sourceBranch: cliArgs.sourceBranch || currentBranch,
     workItems: cliArgs.workItems as WorkItem[] || [],
+    userPrompt: cliArgs.userPrompt || env.USER_PROMPT || '',
+    debug: cliArgs.debug || Boolean(env.DEBUG != '' && env.DEBUG) || false,
   };
 
   return config;
