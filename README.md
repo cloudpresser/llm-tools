@@ -1,50 +1,103 @@
-# CLI Tool: start-ai
+
+# createPr
+
+## Brief Description
+
+`createPr` is a command-line tool designed to streamline the process of creating pull requests by leveraging AI to generate descriptions based on Git diffs. It integrates with Azure DevOps and OpenAI to automate and enhance the pull request workflow, ensuring efficient and thorough documentation.
+
+## Features
+
+- Automatically fetches Git diffs and summarizes changes.
+- Integrates with Azure DevOps to create pull requests.
+- Utilizes OpenAI to generate meaningful PR titles and descriptions.
+- Supports dry-run mode for testing without actual PR creation.
+- Includes customizable PR templates.
 
 ## Installation
 
-To install the dependencies, run:
+### Prerequisites
 
-```bash
-npm install
-# or
-yarn install
-```
+- Node.js and npm or yarn should be installed on your system.
+- Ensure you have a valid Azure DevOps Personal Access Token and OpenAI API key.
 
-### Global Installation
+### Steps
 
-To link the CLI tool globally, run the following command in the root of your project:
+1. Clone the Repository:
 
-```bash
-npm link
-```
+   ```bash
+   git clone https://github.com/yourusername/createPr.git
+   cd createPr
+   ```
 
-This will create a symlink in your global `node_modules` directory, allowing you to use the `start-ai` command from anywhere.
+2. Install Dependencies:
 
-### Environment Variables
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
-Create a `.env` file in the root of your project to store environment variables. This file should contain the following variables:
+3. Link the CLI Tool Globally (optional):
 
-```
-API_KEY=your_api_key_here
-ANOTHER_VARIABLE=another_value
-```
+   ```bash
+   npm link
+   ```
 
-Replace `your_api_key_here` and `another_value` with your actual values. The `.env` file is used to configure environment-specific settings and should not be committed to version control.
+4. Append Repo to Environment Variables:
+   Add the following to your environment variables:
 
-To link the CLI tool globally, run the following command in the root of your project:
-
-```bash
-npm link
-```
-
-This will create a symlink in your global `node_modules` directory, allowing you to use the `start-ai` command from anywhere.
+   ```plaintext
+   ORGANIZATION=your_organization
+   PROJECT=your_project
+   REPOSITORY_ID=your_repo_id
+   PERSONAL_ACCESS_TOKEN=your_token
+   OPENAI_API_KEY=your_openai_key
+   ```
 
 ## Usage
 
-After linking the CLI tool globally, you can use the `start-ai` command as follows:
+### Basic Command
 
 ```bash
-start-ai
+create-pr --title "Your PR Title" --description "Your PR Description"
 ```
 
-This will execute the `start-ai` script and print "Starting AI..." to the console.
+### Using AI for Title and Description
+
+Run the tool and let AI generate the title and description for you:
+
+```bash
+create-pr --dryRun
+```
+
+### Additional Options
+
+- `--mock`: Runs in mock mode, generating placeholder data.
+- `--dryRun`: Executes without actually creating the pull request.
+- `--debug`: Enables debug mode for detailed logging.
+
+## Configuration Options
+
+Configurations can be set via CLI arguments or environment variables. For complete configuration, refer to `src/config.ts`.
+
+## Contribution Guidelines
+
+1. Fork the repository and clone it to your local machine.
+2. Create a new branch for your feature or bugfix.
+3. Follow our [CONVENTIONS.md](CONVENTIONS.md) for coding guidelines.
+4. Write unit tests for your changes.
+5. Submit a pull request with a detailed description of your changes.
+
+## Testing Instructions
+
+Run the test suite using:
+
+```bash
+npm test
+```
+
+Ensure all tests pass before submitting contributions.
+
+## License
+
+This project is licensed under the Apache License 2.0.

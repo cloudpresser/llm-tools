@@ -5,7 +5,7 @@ import path from 'path';
 import chalk from 'chalk';
 import { createConfiguredTable } from './src/createConfiguredTable';
 import ora from 'ora';
-import { createPullRequest } from './src/azureDevOpsClient';
+import { createPullRequest } from './src/utils/azureDevops/createPullRequest';
 import { getGitDiff } from './src/getGitDiff';
 import { readPRTemplate } from './src/readPRTemplate';
 import { generateWithAI } from './src/generateWithAI';
@@ -65,7 +65,7 @@ async function main() {
         spinner: 'dots',
         color: 'cyan'
       }).start();
-      
+
       let titlePrompt;
       if (gitDiff.diff) {
         titlePrompt = "Generate a concise and descriptive pull request title based on the following git diff:";
@@ -74,10 +74,10 @@ async function main() {
       } else {
         titlePrompt = "Generate a generic pull request title as no changes were detected.";
       }
-      
+
       config.title = config.mock
         ? "Mock Pull Request Title"
-        : await generateWithAI(titlePrompt, gitDiff.summary || "No changes detected", true, config.mock);
+        : await generateWithAI(titlePrompt, gitDiff.summary || "No changes detected", false, config.mock);
       titleSpinner.succeed(neonPink('Pull request title generated.'));
     }
 
@@ -174,7 +174,7 @@ async function main() {
     ];
 
     console.log(createConfiguredTable(prDetailsEditDescription));
-    
+
     // Ask if user wants to edit description
     const editDescription = await askToEdit('Do you want to edit the pull request description? (y/n) ');
     if (editDescription) {

@@ -47,7 +47,7 @@ export async function getConfig(): Promise<Config> {
   const cliArgs = getCliArgs();
 
   const currentBranch = await getCurrentBranch();
-  const defaultTargetBranch = 'staging';
+  const defaultTargetBranch = 'origin/staging';
 
   const config: Config = {
     organization: cliArgs.organization || env.ORGANIZATION || '',

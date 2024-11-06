@@ -1,25 +1,13 @@
 import axios from 'axios';
-import { getConfig } from './config';
+import { isString } from 'util';
+import { getConfig, WorkItem } from '../../config';
+import { createConfiguredTable } from '../../createConfiguredTable';
+import { PullRequestParams } from './PullRequestParams';
 
-interface WorkItem {
-  id: number;
-}
+export async function createPullRequest(params: PullRequestParams): Promise<number> {
 
-interface PullRequestParams {
-  organization?: string;
-  project?: string;
-  repositoryId?: string;
-  title: string;
-  description: string;
-  workItems: WorkItem[];
-  targetBranch: string;
-  sourceBranch: string;
-  personalAccessToken?: string;
-}
+  const config = await getConfig();
 
-const config = getConfig();
-
-async function createPullRequest(params: PullRequestParams): Promise<number> {
   const {
     organization = config.organization,
     project = config.project,
@@ -40,14 +28,29 @@ async function createPullRequest(params: PullRequestParams): Promise<number> {
 
   const pullRequestUrl = `${baseUrl}/pullrequests?api-version=${apiVersion}`;
 
+  console.log('Creating Pull Request...');
+  console.log(`Source Branch: ${sourceBranch}`);
+  console.log(`Target Branch: ${targetBranch}`);
+  const requestParams = {
+    sourceRefName: `refs/heads/${sourceBranch.replace(/^origin\//, '')}`,
+    targetRefName: `refs/heads/${targetBranch.replace(/^origin\//, '')}`,
+    title: title,
+    description: description,
+    workItemRefs: workItems.map((item: WorkItem) => ({ id: item.id })),
+  }
+
+  if (config.debug) {
+    console.log(createConfiguredTable(
+      Object.entries(requestParams).map(
+        ([key, value]) => (
+          [key, (isString(value) ? value : JSON.stringify(value))]
+        ),
+      )
+    ));
+  }
+
   try {
-    const response = await axios.post(pullRequestUrl, {
-      sourceRefName: `refs/heads/${sourceBranch}`,
-      targetRefName: `refs/heads/${targetBranch}`,
-      title: title,
-      description: description,
-      workItemRefs: workItems.map((item: WorkItem) => ({ id: item.id })),
-    }, {
+    const response = await axios.post(pullRequestUrl, requestParams, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Basic ${Buffer.from(`:${personalAccessToken}`).toString('base64')}`,
@@ -89,5 +92,3 @@ async function createPullRequest(params: PullRequestParams): Promise<number> {
     }
   }
 }
-
-export { createPullRequest };

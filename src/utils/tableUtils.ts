@@ -1,10 +1,11 @@
 import chalk from 'chalk';
-import { createTable } from './utils/tableUtils';
-import { TableUserConfig } from 'table';
+import { table, TableUserConfig } from 'table';
 
+const neonGreen = chalk.hex('#39FF14');
 const neonBlue = chalk.hex('#00FFFF');
+const neonPink = chalk.hex('#FF00FF');
 
-export function createConfiguredTable(data: [string, string][]): string {
+export function createTable(data: [string, string][] | string[][]): string {
   const config: TableUserConfig = {
     columns: {
       0: { alignment: 'right', width: 15 },
@@ -32,5 +33,5 @@ export function createConfiguredTable(data: [string, string][]): string {
     },
   };
 
-  return createTable(data);
+  return table(data, config);
 }
