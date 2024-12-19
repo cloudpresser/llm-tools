@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Resolve the directory of the script
+SCRIPT_DIR="$(cd "$(dirname "$(realpath "$0")")" && pwd)"
+# Resolve the path to sop-generator.ts relative to the script directory
+CLI_PATH="$SCRIPT_DIR/../src/cli/sop-generator.ts"
+
+# Execute the sop-generator.ts script using tsx
+npx tsx "$CLI_PATH" "$@"

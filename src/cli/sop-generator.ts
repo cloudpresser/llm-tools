@@ -4,15 +4,20 @@ import { Command } from 'commander';
 import Instructor from "@instructor-ai/instructor";
 import OpenAI from "openai";
 import { z } from "zod";
+import { loadEnv } from '../loadEnv';
 import * as fs from 'fs';
 import * as path from 'path';
 import os from 'os';
 import * as lancedb from "@lancedb/lancedb";
+import { tavily } from '@tavily/core';
+
+// Load environment variables
+const env = loadEnv();
 
 // Initialize OpenAI client
 const oai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY ?? undefined,
-  organization: process.env.OPENAI_ORG_ID ?? undefined
+  apiKey: env.OPENAI_API_KEY ?? undefined,
+  organization: env.OPENAI_ORG_ID ?? undefined
 });
 
 // Initialize Instructor client
@@ -93,8 +98,8 @@ async function retrieveRelevantDocs(query: string, table: any) {
 
 
 // Function to generate the AI-optimized prompt
-async function createPrompt(params: z.infer<typeof SOPSchema>, relevantDocs?: string[]) {
-  const combinedContext = relevantDocs?.join("\n\n") || "No additional context provided.";
+async function createPrompt(params: z.infer<typeof SOPSchema>, relevantDocs?: string[], webSearchResults?: string) {
+  const combinedContext = [relevantDocs?.join("\n\n"), webSearchResults].filter(Boolean).join("\n\n") || "No additional context provided.";
 
   return `
 <prompt>
@@ -137,6 +142,7 @@ async function generateSOP(params: z.infer<typeof SOPSchema>, kbPath: string | u
     const table = await initializeDatabase(dbPath);
 
     let relevantDocs;
+    let webSearchResults;
     if (kbPath) {
       console.log("Building database from knowledge base...");
       await buildVectorDatabase(table, kbPath);
@@ -144,8 +150,17 @@ async function generateSOP(params: z.infer<typeof SOPSchema>, kbPath: string | u
       relevantDocs = await retrieveRelevantDocs(`${params.businessSystem} ${params.keyProcesses.join(" ")}`, table);
     }
 
+    const tavilyApiKey = process.env.TAVILY_API_KEY;
+
+    if (tavilyApiKey) {
+      console.log("Performing web search using Tavily...");
+      const tavilyClient = tavily({ apiKey: tavilyApiKey });
+      const query = `Information, tools, context, and best practices for ${params.businessSystem} ${params.keyProcesses.join(' ')}`;
+      webSearchResults = await tavilyClient.searchContext(query);
+    }
+
     console.log("Generating AI prompt...");
-    const prompt = await createPrompt(params, relevantDocs);
+    const prompt = await createPrompt(params, relevantDocs, webSearchResults);
 
     console.log("Requesting AI-generated content...");
     const aiResponse = await client.chat.completions.create({
