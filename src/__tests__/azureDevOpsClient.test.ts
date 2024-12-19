@@ -1,4 +1,4 @@
-import { createPullRequest } from '../azureDevOpsClient';
+import { createPullRequest } from '../utils/azureDevops/createPullRequest';
 import axios from 'axios';
 
 jest.mock('axios');

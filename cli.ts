@@ -2,7 +2,7 @@
 
 import yargs from 'yargs';
 import path from 'path';
-import { createPullRequest } from './src/azureDevOpsClient';
+import { createPullRequest } from './src/utils/azureDevops/createPullRequest';
 import { createConfiguredTable } from './src/createConfiguredTable';
 import dotenv from 'dotenv';
 import ora from 'ora';
@@ -122,7 +122,7 @@ async function main() {
       color: 'cyan'
     }).start();
     const prTemplate = await readPRTemplate(path.dirname(__filename));
-    argv.description = await generatePRDescription(gitDiff.summary, prTemplate, true ,false);
+    argv.description = await generatePRDescription(gitDiff.summary, prTemplate, true, false);
     descriptionSpinner.succeed(neonPink('Pull request description generated.'));
   }
 
