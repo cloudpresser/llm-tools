@@ -3,6 +3,7 @@ import path from 'path';
 import { client } from './shared';
 import { createPrompt } from './prompt';
 import { searchKnowledgeBase } from './database';
+import { tavily } from '@tavily/core';
 import { z } from 'zod';
 import { zodResponseFormat } from "openai/helpers/zod";
 
@@ -49,6 +50,8 @@ export async function improveSOP(params: ImproveSopParams): Promise<ImproveSopRe
 
   // Get relevant context from knowledge base if path provided
   let relevantDocs: string[] = [];
+  let webSearchResults;
+  
   if (params.knowledgeBasePath) {
     try {
       relevantDocs = await searchKnowledgeBase(
@@ -63,6 +66,21 @@ export async function improveSOP(params: ImproveSopParams): Promise<ImproveSopRe
     }
   }
 
+  const tavilyApiKey = process.env.TAVILY_API_KEY;
+  if (tavilyApiKey) {
+    try {
+      console.log("Performing web search using Tavily...");
+      const tavilyClient = tavily({ apiKey: tavilyApiKey });
+      webSearchResults = await tavilyClient.searchContext(params.message, {
+        searchDepth: "advanced",
+        maxTokens: 8000
+      });
+    } catch (error) {
+      console.warn('Failed to get web search results:', error);
+      // Continue without web search results
+    }
+  }
+
   // Create improvement prompt
   const prompt = await createPrompt({
     type: 'improve',
@@ -74,7 +92,7 @@ export async function improveSOP(params: ImproveSopParams): Promise<ImproveSopRe
     businessSystem: '',
     keyProcesses: [],
     outputPath: ''
-  }, relevantDocs);
+  }, relevantDocs, webSearchResults);
 
   // Generate improved content
   const functionSchema = z.object({
