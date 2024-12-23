@@ -1,5 +1,5 @@
 import { SOPParams } from './types';
-import { initializeDatabase, buildVectorDatabase, retrieveRelevantDocs } from './database';
+import { buildVectorDatabase, searchKnowledgeBase, retrieveRelevantDocs } from './database';
 import { createPrompt } from './prompt';
 import { tavily } from '@tavily/core';
 import * as fs from 'fs';
@@ -8,15 +8,18 @@ import OpenAI from "openai";
 
 export async function generateSOP(params: SOPParams, kbPath: string | undefined, dbPath: string, client: OpenAI): Promise<string> {
   try {
-    const table = await initializeDatabase(dbPath);
-
     let relevantDocs;
     let webSearchResults;
     if (kbPath) {
       console.log("Building database from knowledge base...");
-      await buildVectorDatabase(table, kbPath, client);
+      await buildVectorDatabase(kbPath, dbPath, client);
       console.log("Retrieving relevant documents...");
-      relevantDocs = await retrieveRelevantDocs(`${params.businessSystem} ${params.keyProcesses.join(" ")}`, table, client);
+      relevantDocs = await searchKnowledgeBase(
+        `${params.businessSystem} ${params.keyProcesses.join(" ")}`,
+        dbPath,
+        kbPath,
+        client
+      );
     }
 
     const tavilyApiKey = process.env.TAVILY_API_KEY;

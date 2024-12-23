@@ -1,126 +1,213 @@
-import * as lancedb from "@lancedb/lancedb";
+import path from "path";
+import fs from "fs";
 import OpenAI from "openai";
-import * as fs from 'fs';
-import * as path from 'path';
-import { Schema, Field, FixedSizeList, Float32, Utf8 } from 'apache-arrow';
 
-export async function initializeDatabase(dbPath: string) {
-  const db = await lancedb.connect(dbPath);
-  let table;
-  
-  const schema = new Schema([
-    new Field('vector', new FixedSizeList(1536, new Field('item', new Float32()))),
-    new Field('content', new Utf8()),
-    new Field('fileName', new Utf8())
-  ]);
+function getAllMarkdownFiles(dir: string): string[] {
+  if (!fs.existsSync(dir)) {
+    console.error(`Directory does not exist: ${dir}`);
+    return [];
+  }
+
+  console.log(`Scanning for markdown files in: ${dir}`);
+  let results: string[] = [];
 
   try {
-    table = await db.openTable("vectors");
-    // Verify table schema
-    const tableSchema = await table.schema();
-    const vectorField = tableSchema.fields.find((field: any) => field.name === 'vector');
-    if (!vectorField || vectorField.type !== 'float32[1536]') {
-      // Drop and recreate if schema is invalid
-      await db.dropTable("vectors");
-      table = await db.createTable("vectors", [], { schema });
+    const list = fs.readdirSync(dir);
+
+    for (const file of list) {
+      const filePath = path.join(dir, file);
+      const stat = fs.statSync(filePath);
+
+      if (stat.isDirectory()) {
+        // Recursively scan subdirectories
+        results = results.concat(getAllMarkdownFiles(filePath));
+      } else if (file.toLowerCase().endsWith('.md')) {
+        console.log(`Found markdown file: ${filePath}`);
+        results.push(filePath);
+      }
     }
-  } catch {
-    console.log("Creating new vectors table...");
-    table = await db.createTable("vectors", [], { schema });
+  } catch (err) {
+    console.error(`Error scanning directory ${dir}:`, err);
   }
-  return table;
+
+  return results;
 }
 
-export async function buildVectorDatabase(table: any, kbPath: string, client: OpenAI) {
+
+export async function buildVectorDatabase(kbPath: string, dbPath: string, client: OpenAI) {
   console.log("Building vector database from knowledge base...");
-  const files = fs.readdirSync(kbPath).filter(file => file.endsWith(".md"));
-  const vectors = [];
 
-  for (const file of files) {
-    const filePath = path.join(kbPath, file);
-    const content = fs.readFileSync(filePath, "utf8");
+  // Ensure dbPath ends with vectors.json
+  const vectorsFile = path.join(dbPath, 'vectors.json');
 
-    try {
-      const embedding = await (client as OpenAI).embeddings.create({
-        input: content,
-        model: "text-embedding-3-small"
-      });
+  // Create the database directory if it doesn't exist
+  fs.mkdirSync(dbPath, { recursive: true });
 
-      const vector = embedding.data?.[0]?.embedding;
-      
-      if (vector && vector.length === 1536) {
-        vectors.push({
-          vector,
-          content,
-          fileName: file
-        });
+  // Try to load existing vectors
+  let existingVectors = [];
+  try {
+    if (fs.existsSync(vectorsFile)) {
+      existingVectors = JSON.parse(fs.readFileSync(vectorsFile, 'utf8'));
+      // Validate vector dimensions
+      if (existingVectors.length > 0 && existingVectors[0].embedding.length !== 3072) {
+        console.log("Existing vectors have incorrect dimensions. Rebuilding database...");
+        fs.unlinkSync(vectorsFile);
       } else {
-        console.warn(`Invalid embedding for file ${file}: incorrect dimension or format`);
+        return { vectors: existingVectors };
       }
-    } catch (error) {
-      console.error(`Error generating embedding for file ${file}:`, error);
     }
+  } catch (err) {
+    console.warn("Could not load existing vectors, creating new database");
+  }
+  // Get markdown files from the knowledge base path
+  const files = getAllMarkdownFiles(kbPath);
+  console.log(`Found ${files.length} markdown files in knowledge base at ${kbPath}`);
+  if (files.length === 0) {
+    console.warn(`No markdown files found in the knowledge base directory: ${kbPath}`);
+    return { vectors: [] };
   }
 
-  await table.add(vectors);
-}
-
-export async function searchKnowledgeBase(query: string, kbPath: string, dbPath: string, client: OpenAI) {
-  try {
-    const db = await lancedb.connect(dbPath);
-    let table;
-    
+  const documents = [];
+  for (const filePath of files) {
+    console.log(`Processing file: ${filePath}`);
+    let content: string;
     try {
-      table = await db.openTable("vectors");
-      // Check if table is empty
-      const count = await table.countRows();
-      if (count <= 1) { // Only has dummy row
-        console.log("Building initial vector database...");
-        await buildVectorDatabase(table, kbPath, client);
-      }
-    } catch (error) {
-      console.log("Initializing vector database...");
-      table = await initializeDatabase(dbPath);
-      await buildVectorDatabase(table, kbPath, client);
+      content = fs.readFileSync(filePath, "utf8");
+      console.log(`Read content from file: ${filePath}`);
+    } catch (err) {
+      console.error(`Error reading file ${filePath}:`, err);
+      continue;
     }
 
-    const results = await retrieveRelevantDocs(query, table, client);
-    return results;
+    documents.push({
+      text: content,
+      fileName: path.relative(kbPath, filePath),
+    });
+  }
+
+  if (documents.length > 0) {
+    // Generate embeddings using OpenAI
+    const embeddings = [];
+    for (const doc of documents) {
+      // split document into chunks per second level header, or a maximum of 4000 tokens with 400 token overlap
+      // split doc into level 2 headers only ("##")
+      const contextualChunkDoc = doc.text.split('## ').map((chunk, index) => ({
+        ...doc,
+        text: `Filename:${doc.fileName}\n Chunk: ${chunk}`,
+      }));
+
+      for (const doc of contextualChunkDoc) {
+        const response = await client.embeddings.create({
+          model: "text-embedding-3-large",
+          input: doc.text,
+          dimensions: 3072
+        });
+        embeddings.push({
+          text: doc.text,
+          fileName: doc.fileName,
+          embedding: response.data[0].embedding,
+        });
+      }
+    }
+
+    // Save to file
+    fs.writeFileSync(vectorsFile, JSON.stringify(embeddings));
+    console.log("Vector database built and saved.");
+    return { vectors: embeddings };
+  } else {
+    console.warn("No documents were added to the database.");
+    return { vectors: [] };
+  }
+}
+
+export async function searchKnowledgeBase(
+  query: string,
+  dbPath: string,
+  kbPath: string,
+  client: OpenAI
+) {
+  try {
+    const { vectors } = await buildVectorDatabase(kbPath, dbPath, client);
+
+    if (!vectors || vectors.length === 0) {
+      throw new Error("No vectors found in database");
+    }
+
+    // Generate embedding for the query
+    const queryResponse = await client.embeddings.create({
+      model: "text-embedding-3-large",
+      input: query,
+      dimensions: 3072
+    });
+    const queryEmbedding = queryResponse.data[0].embedding;
+
+
+    // Compute cosine similarity and sort results
+    const results = vectors
+      .map(doc => ({
+        ...doc,
+        similarity: cosineSimilarity(queryEmbedding, doc.embedding)
+      })).sort((a, b) => a.similarity - b.similarity)
+      .slice(0, 15);
+
+    return results.map(result => `Filename: ${result.fileName}/n Content: ${result.text}`);
   } catch (error) {
     console.error("Error searching knowledge base:", error);
-    throw error; // Propagate error for better debugging
+    return [];
   }
 }
 
-export async function retrieveRelevantDocs(query: string, table: any, client: OpenAI) {
+// Utility function to compute cosine similarity
+function cosineSimilarity(vec1: number[], vec2: number[]): number {
+  if (vec1.length !== vec2.length) {
+    throw new Error("Vectors must be the same length");
+  }
+
+  let dotProduct = 0;
+  let magnitude1 = 0;
+  let magnitude2 = 0;
+
+  for (let i = 0; i < vec1.length; i++) {
+    dotProduct += vec1[i] * vec2[i];
+    magnitude1 += vec1[i] * vec1[i];
+    magnitude2 += vec2[i] * vec2[i];
+  }
+
+  magnitude1 = Math.sqrt(magnitude1);
+  magnitude2 = Math.sqrt(magnitude2);
+
+  if (magnitude1 === 0 || magnitude2 === 0) {
+    return 0;
+  }
+
+  return dotProduct / (magnitude1 * magnitude2);
+}
+
+export async function retrieveRelevantDocs(query: string, vectors: any[], client: OpenAI) {
   try {
-    const queryEmbedding = await client.embeddings.create({
+    const queryResponse = await client.embeddings.create({
+      model: "text-embedding-3-large",
       input: query,
-      model: "text-embedding-3-small"
+      dimensions: 3072
     });
+    const queryEmbedding = queryResponse.data[0].embedding;
 
-    const embedding = queryEmbedding.data?.[0]?.embedding;
-    
-    if (!embedding || embedding.length !== 1536) {
-      console.error("Failed to generate valid embedding for query");
-      return [];
-    }
+    console.log({
+      vector: vectors, similarity: vectors
+        .map(doc => ({
+          ...doc,
+          similarity: cosineSimilarity(queryEmbedding, doc.embedding)
+        }))
+    });
+    const results = vectors
+      .map(doc => ({
+        text: doc.text,
+        similarity: cosineSimilarity(queryEmbedding, doc.embedding)
+      }))
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, 5);
 
-    const results = await table.search(embedding)
-      .limit(5)
-      .execute();
-    
-    // Debug the results structure
-    console.log('Search results structure:', JSON.stringify(results, null, 2));
-    
-    if (!Array.isArray(results)) {
-      console.warn("Search results are not in expected format");
-      return [];
-    }
-    
-    return results
-      .filter(row => row && typeof row === 'object' && 'content' in row)
-      .map(row => row.content as string);
+    return results.map(result => result.text);
   } catch (error) {
     console.error("Error retrieving relevant documents:", error);
     return [];

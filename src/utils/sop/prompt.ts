@@ -15,6 +15,8 @@ export async function createPrompt(
   const combinedContext =
     [relevantDocs?.join('\n\n'), webSearchResults].filter(Boolean).join('\n\n') ||
     'No additional context provided.';
+
+  console.log({ combinedContext })
   const procedureInstructions = `
 ## How to Write a Procedure
 A procedure is a step-by-step instruction and actions designed to achieve a specific task or goal.
@@ -123,11 +125,10 @@ Additionally, there may be changes in your industry that need to be incorporated
       <guide> ${procedureInstructions} </guide>
       <improvement>
         <message>${params.message}</message>
-        ${
-          params.targetPortion
-            ? `<targetPortion>${params.targetPortion}</targetPortion>`
-            : ''
-        }
+        ${params.targetPortion
+        ? `<targetPortion>${params.targetPortion}</targetPortion>`
+        : ''
+      }
       </improvement>
       <originalContent>
 ${params.originalContent}
@@ -157,8 +158,8 @@ ${combinedContext}
     <businessContext>${params.businessContext || 'None provided'}</businessContext>
     <keyProcesses>
       ${params.keyProcesses
-        .map((process) => `<process>${process}</process>`)
-        .join('\n      ')}
+      .map((process) => `<process>${process}</process>`)
+      .join('\n      ')}
     </keyProcesses>
     <relevantDocumentation>
       ${combinedContext}

@@ -53,8 +53,8 @@ export async function improveSOP(params: ImproveSopParams): Promise<ImproveSopRe
     try {
       relevantDocs = await searchKnowledgeBase(
         params.message,
-        params.knowledgeBasePath,
         params.databasePath,
+        params.knowledgeBasePath,
         params.client
       );
     } catch (error) {
