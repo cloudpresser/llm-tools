@@ -42,7 +42,7 @@ async function getWorkItems(authToken: string, organizationId: string, project: 
 }
 
 async function main() {
-  const argv = yargs(hideBin(process.argv))
+  const argv = await yargs(hideBin(process.argv))
     .option('token', {
       alias: 't',
       type: 'string',
@@ -55,10 +55,16 @@ async function main() {
       demandOption: true,
       description: 'Azure DevOps Organization ID'
     })
+    .option('project', {
+      alias: 'p',
+      type: 'string',
+      demandOption: true,
+      description: 'Azure DevOps Project'
+    })
     .help()
-    .argv;
+    .parse();
 
-  const workItems = await getWorkItems(argv.token, argv.organization);
+  const workItems = await getWorkItems(argv.token, argv.organization, argv.project);
 
   console.log('Assigned Work Items:', workItems);
 }
