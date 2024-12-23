@@ -1,6 +1,7 @@
 import { SOPParams } from './types';
 import { buildVectorDatabase, searchKnowledgeBase, retrieveRelevantDocs } from './database';
 import { createPrompt } from './prompt';
+import { generateSOPContent, formatSOPContent } from './aiCompletion';
 import { tavily } from '@tavily/core';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -38,21 +39,14 @@ export async function generateSOP(params: SOPParams, kbPath: string | undefined,
     const prompt = await createPrompt(params, relevantDocs, webSearchResults);
 
     console.log("Requesting AI-generated content...");
-    const aiResponse = await client.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
-      model: "gpt-4"
-    });
-
-    const finalSOP = aiResponse.choices[0].message.content || '';
-
-    // Replace escaped newline characters with actual newlines
-    const processedSOP = finalSOP.replace(/\\n/g, '\n');
+    const sopContent = await generateSOPContent(client, prompt);
+    const processedSOP = formatSOPContent(sopContent);
 
     const outputFile = path.resolve(params.outputPath, `${params.title.replace(/\s+/g, '_')}_SOP.md`);
     fs.writeFileSync(outputFile, processedSOP);
 
     console.log(`SOP created successfully: ${outputFile}`);
-    return finalSOP;
+    return processedSOP;
   } catch (error) {
     console.error("Error generating SOP:", error);
     throw error;
