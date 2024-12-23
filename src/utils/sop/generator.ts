@@ -4,9 +4,9 @@ import { createPrompt } from './prompt';
 import { tavily } from '@tavily/core';
 import * as fs from 'fs';
 import * as path from 'path';
-import { Instructor } from "@instructor-ai/instructor";
+import OpenAI from "openai";
 
-export async function generateSOP(params: SOPParams, kbPath: string | undefined, dbPath: string, client: Instructor): Promise<string> {
+export async function generateSOP(params: SOPParams, kbPath: string | undefined, dbPath: string, client: OpenAI): Promise<string> {
   try {
     const table = await initializeDatabase(dbPath);
 
@@ -25,7 +25,10 @@ export async function generateSOP(params: SOPParams, kbPath: string | undefined,
       console.log("Performing web search using Tavily...");
       const tavilyClient = tavily({ apiKey: tavilyApiKey });
       const query = `Information, tools, context, and best practices for ${params.businessSystem} ${params.keyProcesses.join(' ')}`;
-      webSearchResults = await tavilyClient.searchContext(query);
+      webSearchResults = await tavilyClient.searchContext(query, {
+        searchDepth: "advanced",
+        maxTokens: 8000
+      });
     }
 
     console.log("Generating AI prompt...");
@@ -37,10 +40,13 @@ export async function generateSOP(params: SOPParams, kbPath: string | undefined,
       model: "gpt-4"
     });
 
-    const finalSOP = aiResponse.choices[0].message.content;
+    const finalSOP = aiResponse.choices[0].message.content || '';
+
+    // Replace escaped newline characters with actual newlines
+    const processedSOP = finalSOP.replace(/\\n/g, '\n');
 
     const outputFile = path.resolve(params.outputPath, `${params.title.replace(/\s+/g, '_')}_SOP.md`);
-    fs.writeFileSync(outputFile, finalSOP);
+    fs.writeFileSync(outputFile, processedSOP);
 
     console.log(`SOP created successfully: ${outputFile}`);
     return finalSOP;

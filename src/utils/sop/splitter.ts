@@ -1,9 +1,9 @@
 import { SOPParams } from './types';
-import { Instructor } from "@instructor-ai/instructor";
+import OpenAI from "openai";
 import * as fs from 'fs';
 import { generateSOP } from './generator';
 
-export async function identifySubProcesses(sopPath: string, client: Instructor): Promise<string[]> {
+export async function identifySubProcesses(sopPath: string, client: OpenAI): Promise<string[]> {
   const sopContent = fs.readFileSync(sopPath, 'utf-8');
   
   const response = await client.chat.completions.create({
@@ -15,10 +15,10 @@ export async function identifySubProcesses(sopPath: string, client: Instructor):
                 SOP Content:
                 ${sopContent}`
     }],
-    model: "o1-preview"
+    model: "gpt-4"
   });
 
-  const content = response.choices[0].message.content;
+  const content = response.choices[0].message.content || '';
   // Clean up the response by removing markdown formatting and any extra text
   const cleanedContent = content.replace(/```json\n|\n```/g, '').trim();
   return JSON.parse(cleanedContent);
@@ -29,7 +29,7 @@ export async function generateSubProcessSOPs(
   subProcesses: string[],
   kbPath: string | undefined,
   dbPath: string,
-  client: Instructor
+  client: OpenAI
 ): Promise<string[]> {
   const generatedPaths: string[] = [];
 

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+SCRIPT_DIR="$(cd "$(dirname "$(realpath "$0")")" && pwd)"
+CLI_PATH="$SCRIPT_DIR/../src/cli/sop-improver.ts"
+
+npx tsx "$CLI_PATH" "$@"
