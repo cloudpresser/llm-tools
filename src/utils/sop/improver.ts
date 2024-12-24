@@ -96,7 +96,6 @@ export async function improveSOP(params: ImproveSopParams): Promise<ImproveSopRe
 
   try {
     const improvedContent = await generateSOPContent(params.client, prompt, params.targetSection ? [params.targetSection] : undefined);
-    console.log(improvedContent);
 
     let finalContent;
     if (params.targetSection) {
