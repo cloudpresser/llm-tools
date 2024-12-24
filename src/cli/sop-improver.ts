@@ -12,7 +12,7 @@ program
   .version("1.0.0")
   .requiredOption("-s, --sop <path>", "Path to the source SOP file")
   .requiredOption("-m, --message <message>", "Improvement message or instructions")
-  .option("-p, --portion <text>", "Specific portion of the SOP to target (optional)")
+  .option("-t, --targetSection <section>", "Specific section to target (purpose, scope, rolesAndResponsibilities, procedure)")
   .option("-kb, --knowledgeBase <path>", "Path to the knowledge base directory")
   .option("-db, --database <path>", "Path to the local vector database directory", getDefaultDBPath())
   .option("-o, --output <path>", "Output path for improved SOP", "./improved-sop.md")
@@ -21,17 +21,20 @@ program
       const client = initializeAIClients();
 
       console.log("Improving SOP based on provided message...");
+      const targetSections = options.targetSection ? [options.targetSection as keyof SOPContent] : undefined;
+      
       const improvedSOPPath = await improveSOP({
         sopPath: options.sop,
         message: options.message,
-        targetPortion: options.portion,
+        targetSection: options.targetSection,
+        targetSections,
         knowledgeBasePath: options.knowledgeBase,
         databasePath: options.database,
         outputPath: options.output,
         client
       });
 
-      console.log(`Improved SOP saved to: ${improvedSOPPath}`);
+      console.log(`Improved SOP saved to: ${improvedSOPPath?.outputPath}`);
     } catch (error) {
       console.error("Error:", error);
       process.exit(1);

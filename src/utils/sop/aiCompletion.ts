@@ -4,11 +4,10 @@ import OpenAI from "openai";
 
 export const sopSchema = z.object({
   title: z.string().describe("The title of the SOP"),
-  purpose: z.string().describe("The purpose of the SOP, in Markdown format, starting with a level 2 heading (##)"),
-  scope: z.string().describe("The scope of the SOP, in Markdown format, starting with a level 2 heading (##)"),
-  rolesAndResponsibilities: z.string().describe("The roles and responsibilities section of the SOP, in Markdown format, starting with a level 2 heading (##)"),
-  procedure: z.string().describe("The procedure section of the SOP, in Markdown format, starting with a level 2 heading (##), each subsection starting with a level 3 heading (###)"),
-  kpis: z.string().describe("The KPIs section of the SOP, in Markdown format, starting with a level 2 heading (##)"),
+  purpose: z.string().optional().describe("The purpose of the SOP, in Markdown format, starting with a level 2 heading (##)"),
+  scope: z.string().optional().describe("The scope of the SOP, in Markdown format, starting with a level 2 heading (##)"),
+  rolesAndResponsibilities: z.string().optional().describe("The roles and responsibilities section of the SOP, in Markdown format, starting with a level 2 heading (##)"),
+  procedure: z.string().optional().describe("The procedure section of the SOP, in Markdown format, starting with a level 2 heading (##), each subsection starting with a level 3 heading (###)"),
   documentReferences: z.array(z.object({
     title: z.string().optional().describe("The name of the document or template referenced"),
     type: z.union([
@@ -31,11 +30,20 @@ export type SOPContent = z.infer<typeof sopSchema>;
 export async function generateSOPContent(
   client: OpenAI,
   prompt: string,
-): Promise<SOPContent> {
+  sections?: Array<keyof SOPContent>
+): Promise<SOPContent | Partial<SOPContent>> {
+  // If no sections specified, generate all sections
+  const targetSchema = sections 
+    ? z.object(
+        Object.fromEntries(
+          sections.map(section => [section, sopSchema.shape[section]])
+        )
+      )
+    : sopSchema;
   const completion = await client.beta.chat.completions.parse({
     messages: [{ role: 'user', content: prompt }],
     model: "gpt-4o-2024-08-06",
-    response_format: zodResponseFormat(sopSchema, 'sop_content'),
+    response_format: zodResponseFormat(targetSchema, 'sop_content'),
   });
 
   const content = completion.choices[0].message.parsed;
@@ -48,14 +56,14 @@ export async function generateSOPContent(
 }
 
 export function formatSOPContent(content: SOPContent): string {
-  const documentReferences = [
-    `### Documents
+  const documentReferences = content.documentReferences ? [
+    `## Documents
 
-Documents, checklists, images, diagrams, flowcharts, SOPs, policies, ...`,
+Documents, checklists, images, diagrams, flowcharts, SOPs, policies, ...\n`,
     content.documentReferences.map((ref) => {
-      return `### ${ref.title} \n  - [Link](${ref.link}) \n  - ${ref.description} \n - Type: ${ref.type}`;
+      return `### ${ref.title} \n  - [Link](${ref.link}) \n  - ${ref.description} \n -  Type: ${ref.type}`;
     }).join('\n')
-  ];
+  ] : [];
 
   return [
     `# ${content.title || 'Standard Operating Procedure'}`,
@@ -63,7 +71,6 @@ Documents, checklists, images, diagrams, flowcharts, SOPs, policies, ...`,
     content.scope,
     content.rolesAndResponsibilities,
     content.procedure,
-    content.kpis,
     documentReferences.join('\n')
   ].join('\n\n');
 }

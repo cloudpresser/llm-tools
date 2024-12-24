@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { client } from './shared';
 import { createPrompt } from './prompt';
+import { extractMarkdownSections, reconstructMarkdown } from './markdownUtils';
 import { searchKnowledgeBase } from './database';
 import { tavily } from '@tavily/core';
 import { generateSOPContent, formatSOPContent } from './aiCompletion';
@@ -9,7 +10,7 @@ import { generateSOPContent, formatSOPContent } from './aiCompletion';
 interface ImproveSopParams {
   sopPath: string;
   message: string;
-  targetPortion?: string;
+  targetSection?: 'purpose' | 'scope' | 'rolesAndResponsibilities' | 'procedure';
   knowledgeBasePath?: string;
   databasePath: string;
   outputPath?: string;
@@ -50,7 +51,7 @@ export async function improveSOP(params: ImproveSopParams): Promise<ImproveSopRe
   // Get relevant context from knowledge base if path provided
   let relevantDocs: string[] = [];
   let webSearchResults;
-  
+
   if (params.knowledgeBasePath) {
     try {
       relevantDocs = await searchKnowledgeBase(
@@ -85,7 +86,7 @@ export async function improveSOP(params: ImproveSopParams): Promise<ImproveSopRe
     type: 'improve',
     originalContent: originalSOP,
     message: params.message,
-    targetPortion: params.targetPortion,
+    targetSection: params.targetSection,
     title: '',
     description: '',
     businessSystem: '',
@@ -94,50 +95,71 @@ export async function improveSOP(params: ImproveSopParams): Promise<ImproveSopRe
   }, relevantDocs, webSearchResults);
 
   try {
-    const improvedContent = await generateSOPContent(params.client, prompt);
+    const improvedContent = await generateSOPContent(params.client, prompt, params.targetSection ? [params.targetSection] : undefined);
     console.log(improvedContent);
 
-    const finalContent = formatSOPContent(improvedContent);
+    let finalContent;
+    if (params.targetSection) {
+      // Extract the title and sections from original SOP
+      const [title, ...rest] = originalSOP.split('\n');
+      const originalSections = extractMarkdownSections(rest.join('\n'));
 
-      const outputPath = params.outputPath || params.sopPath;
-      let backupPath: string | undefined;
-      let wasBackupCreated = false;
+      // Extract sections from improved content
+      const improvedFormatted = formatSOPContent(improvedContent);
+      const improvedSections = extractMarkdownSections(improvedFormatted);
+      console.log({ improvedSections })
 
-      try {
-        // Create backup of original file if we're overwriting it
-        if (outputPath === params.sopPath) {
-          backupPath = `${params.sopPath}.bak`;
-          await fs.copyFile(params.sopPath, backupPath);
-          wasBackupCreated = true;
-        }
-
-        // Ensure output directory exists
-        const outputDir = path.dirname(outputPath);
-        await fs.mkdir(outputDir, { recursive: true });
-
-        // Write improved SOP
-        await fs.writeFile(outputPath, finalContent);
-
-        return {
-          outputPath,
-          backupPath,
-          wasBackupCreated
-        };
-      } catch (error) {
-        // If writing fails and we created a backup, try to restore it
-        if (wasBackupCreated && backupPath) {
-          try {
-            await fs.copyFile(backupPath, params.sopPath);
-          } catch (restoreError) {
-            console.error('Failed to restore backup:', restoreError);
-          }
-        }
-
-        if (error instanceof Error) {
-          throw new Error(`Failed to write improved SOP: ${error.message}`);
-        }
-        throw error;
+      // Only update the targeted section
+      if (params.targetSection && improvedSections[params.targetSection]) {
+        originalSections[params.targetSection] = improvedSections[params.targetSection];
       }
+
+      // Reconstruct the content preserving other sections
+      finalContent = reconstructMarkdown(title, originalSections);
+    } else {
+      finalContent = formatSOPContent(improvedContent);
+    }
+
+    const outputPath = params.outputPath || params.sopPath;
+    let backupPath: string | undefined;
+    let wasBackupCreated = false;
+
+    try {
+      // Create backup of original file if we're overwriting it
+      if (outputPath === params.sopPath) {
+        backupPath = `${params.sopPath}.bak`;
+        await fs.copyFile(params.sopPath, backupPath);
+        wasBackupCreated = true;
+      }
+
+      // Ensure output directory exists
+      const outputDir = path.dirname(outputPath);
+      await fs.mkdir(outputDir, { recursive: true });
+
+      // Write improved SOP with proper line endings
+      const contentToWrite = finalContent.trim() + '\n';
+      await fs.writeFile(outputPath, contentToWrite, 'utf8');
+
+      return {
+        outputPath,
+        backupPath,
+        wasBackupCreated
+      };
+    } catch (error) {
+      // If writing fails and we created a backup, try to restore it
+      if (wasBackupCreated && backupPath) {
+        try {
+          await fs.copyFile(backupPath, params.sopPath);
+        } catch (restoreError) {
+          console.error('Failed to restore backup:', restoreError);
+        }
+      }
+
+      if (error instanceof Error) {
+        throw new Error(`Failed to write improved SOP: ${error.message}`);
+      }
+      throw error;
+    }
   } catch (e: any) {
     // Handle edge cases
     if (e.constructor.name === "LengthFinishReasonError") {

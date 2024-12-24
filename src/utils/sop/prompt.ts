@@ -4,7 +4,7 @@ interface SOPPromptParams extends SOPParams {
   type?: 'generate' | 'improve';
   originalContent?: string;
   message?: string;
-  targetPortion?: string;
+  targetSection?: 'purpose' | 'scope' | 'rolesAndResponsibilities' | 'procedure' | 'documents';
 }
 
 export async function createPrompt(
@@ -118,17 +118,17 @@ Additionally, there may be changes in your industry that need to be incorporated
 `;
 
   if (params.type === 'improve') {
-    return `Please provide your response as a JSON object.
+    const sectionInstruction = params.targetSection
+      ? `IMPORTANT: You must ONLY modify the "${params.targetSection}" section. All other sections must remain EXACTLY as they are in the original content.`
+      : 'Improve all sections as needed.';
+
+    return `Please provide your response as a JSON object. ${sectionInstruction}
 
   <prompt>
     <objective>Improve the existing Standard Operating Procedure based on the following requirements and return as JSON </objective>
       <guide> ${procedureInstructions} </guide>
       <improvement>
         <message>${params.message}</message>
-        ${params.targetPortion
-        ? `<targetPortion>${params.targetPortion}</targetPortion>`
-        : ''
-      }
       </improvement>
       <originalContent>
 ${params.originalContent}
@@ -168,7 +168,9 @@ ${combinedContext}
   <sections>
     <section name="Purpose" />
     <section name="Scope" />
-    <section name="Roles and Responsibilities" />
+    <section name="Roles and Responsibilities">
+      <subsection name="Key Performance Indicators (KPIs)" />
+    </section>
     <section name="Procedure">
       <subsection name="Step 1: [Step Name]" />
       <subsection name="Step 2: [Step Name]" />
