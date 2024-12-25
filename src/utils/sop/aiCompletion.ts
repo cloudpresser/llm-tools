@@ -33,12 +33,12 @@ export async function generateSOPContent(
   sections?: Array<keyof SOPContent>
 ): Promise<SOPContent | Partial<SOPContent>> {
   // If no sections specified, generate all sections
-  const targetSchema = sections 
+  const targetSchema = sections
     ? z.object(
-        Object.fromEntries(
-          sections.map(section => [section, sopSchema.shape[section]])
-        )
+      Object.fromEntries(
+        sections.map(section => [section, sopSchema.shape[section]])
       )
+    )
     : sopSchema;
   const completion = await client.beta.chat.completions.parse({
     messages: [{ role: 'user', content: prompt }],
@@ -61,7 +61,7 @@ export function formatSOPContent(content: SOPContent): string {
 
 Documents, checklists, images, diagrams, flowcharts, SOPs, policies, ...\n`,
     content.documentReferences.map((ref) => {
-      return `### ${ref.title} \n  - [Link](${ref.link}) \n  - ${ref.description} \n -  Type: ${ref.type}`;
+      return `### ${ref.title} \n  - [Link](${ref.link}) \n  - ${ref.description} \n  - Type: ${ref.type}`;
     }).join('\n')
   ] : [];
 
