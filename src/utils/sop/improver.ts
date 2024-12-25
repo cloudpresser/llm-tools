@@ -104,7 +104,11 @@ export async function improveSOP(params: ImproveSopParams): Promise<ImproveSopRe
       const originalSections = extractMarkdownSections(rest.join('\n'));
 
       // Extract sections from improved content
-      const improvedFormatted = formatSOPContent(improvedContent);
+      const improvedFormatted = formatSOPContent({
+        ...improvedContent,
+        title: improvedContent.title || '',
+        documentReferences: improvedContent.documentReferences || []
+      });
       const improvedSections = extractMarkdownSections(improvedFormatted);
       console.log({ improvedSections })
 
@@ -116,7 +120,11 @@ export async function improveSOP(params: ImproveSopParams): Promise<ImproveSopRe
       // Reconstruct the content preserving other sections
       finalContent = reconstructMarkdown(title, originalSections);
     } else {
-      finalContent = formatSOPContent(improvedContent);
+      finalContent = formatSOPContent({
+        ...improvedContent,
+        title: improvedContent.title || '',
+        documentReferences: improvedContent.documentReferences || []
+      });
     }
 
     const outputPath = params.outputPath || params.sopPath;

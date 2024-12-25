@@ -40,7 +40,11 @@ export async function generateSOP(params: SOPParams, kbPath: string | undefined,
 
     console.log("Requesting AI-generated content...");
     const sopContent = await generateSOPContent(client, prompt);
-    const processedSOP = formatSOPContent(sopContent);
+    const processedSOP = formatSOPContent({
+      ...sopContent,
+      title: sopContent.title || '',
+      documentReferences: sopContent.documentReferences || []
+    });
 
     const outputFile = path.resolve(params.outputPath, `${params.title.replace(/\s+/g, '_')}_SOP.md`);
     fs.writeFileSync(outputFile, processedSOP);

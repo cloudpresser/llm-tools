@@ -144,13 +144,15 @@ export async function searchKnowledgeBase(
 
     // Compute cosine similarity and sort results
     const results = vectors
-      .map(doc => ({
+      .map((doc: { text: string; fileName: string; embedding: number[] }) => ({
         ...doc,
         similarity: cosineSimilarity(queryEmbedding, doc.embedding)
-      })).sort((a, b) => a.similarity - b.similarity)
+      })).sort((a: { similarity: number }, b: { similarity: number }) => a.similarity - b.similarity)
       .slice(0, 15);
 
-    return results.map(result => `Filename: ${result.fileName}/n Content: ${result.text}`);
+    return results.map((result: { fileName: string; text: string }) => 
+      `Filename: ${result.fileName}/n Content: ${result.text}`
+    );
   } catch (error) {
     console.error("Error searching knowledge base:", error);
     return [];

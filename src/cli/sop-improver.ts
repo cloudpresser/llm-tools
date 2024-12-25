@@ -21,13 +21,10 @@ program
       const client = initializeAIClients();
 
       console.log("Improving SOP based on provided message...");
-      const targetSections = options.targetSection ? [options.targetSection as keyof SOPContent] : undefined;
-      
       const improvedSOPPath = await improveSOP({
         sopPath: options.sop,
         message: options.message,
         targetSection: options.targetSection,
-        targetSections,
         knowledgeBasePath: options.knowledgeBase,
         databasePath: options.database,
         outputPath: options.output,
