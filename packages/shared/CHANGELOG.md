@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.3.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/shared@1.2.0...@cloudpresser/shared@1.3.0) (2025-01-27)
+
+
+### Features
+
+* **createPr:** add public access to package ([95cda15](https://github.com/cloudpresser/llm-tools/commit/95cda15ab97da1d17797ebbb6d0f1be4de656ee8))
+
+
+
+
+
 # [1.2.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/shared@1.1.0...@cloudpresser/shared@1.2.0) (2025-01-27)
 
 
