@@ -2,7 +2,6 @@ import readline from 'readline';
 import { execSync } from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import chalk from 'chalk';
 import ora from 'ora';
 
@@ -71,16 +70,16 @@ async function main() {
 
       let titlePrompt;
       if (gitDiff.diff) {
-        titlePrompt = "Generate a concise and descriptive pull request title based on the following git diff:";
+        titlePrompt = 'Generate a concise and descriptive pull request title based on the following git diff:';
       } else if (gitDiff.summary.startsWith('Error:')) {
         titlePrompt = `Generate a generic pull request title. Note: ${gitDiff.summary}`;
       } else {
-        titlePrompt = "Generate a generic pull request title as no changes were detected.";
+        titlePrompt = 'Generate a generic pull request title as no changes were detected.';
       }
 
       config.title = config.mock
-        ? "Mock Pull Request Title"
-        : await generateWithAI(titlePrompt, gitDiff.summary || "No changes detected", false, config.mock);
+        ? 'Mock Pull Request Title'
+        : await generateWithAI(titlePrompt, gitDiff.summary || 'No changes detected', false, config.mock);
       titleSpinner.succeed(neonPink('Pull request title generated.'));
     }
 
