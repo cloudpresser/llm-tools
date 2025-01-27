@@ -1,9 +1,7 @@
 import chalk from 'chalk';
 import { table, TableUserConfig } from 'table';
 
-const neonGreen = chalk.hex('#39FF14');
 const neonBlue = chalk.hex('#00FFFF');
-const neonPink = chalk.hex('#FF00FF');
 
 export function createTable(data: [string, string][] | string[][]): string {
   const config: TableUserConfig = {

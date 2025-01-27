@@ -26,8 +26,8 @@ function getAllMarkdownFiles(dir: string): string[] {
         results.push(filePath);
       }
     }
-  } catch (err) {
-    console.error(`Error scanning directory ${dir}:`, err);
+  } catch (error) {
+    console.error(`Error scanning directory ${dir}:`, error);
   }
 
   return results;
@@ -56,7 +56,7 @@ export async function buildVectorDatabase(kbPath: string, dbPath: string, client
         return { vectors: existingVectors };
       }
     }
-  } catch (err) {
+  } catch {
     console.warn("Could not load existing vectors, creating new database");
   }
   // Get markdown files from the knowledge base path
@@ -91,7 +91,7 @@ export async function buildVectorDatabase(kbPath: string, dbPath: string, client
     for (const doc of documents) {
       // split document into chunks per second level header, or a maximum of 4000 tokens with 400 token overlap
       // split doc into level 2 headers only ("##")
-      const contextualChunkDoc = doc.text.split('## ').map((chunk, index) => ({
+      const contextualChunkDoc = doc.text.split('## ').map(chunk => ({
         ...doc,
         text: `Filename:${doc.fileName}\n Chunk: ${chunk}`,
       }));
@@ -185,7 +185,12 @@ function cosineSimilarity(vec1: number[], vec2: number[]): number {
   return dotProduct / (magnitude1 * magnitude2);
 }
 
-export async function retrieveRelevantDocs(query: string, vectors: any[], client: OpenAI) {
+interface Vector {
+  text: string;
+  embedding: number[];
+}
+
+export async function retrieveRelevantDocs(query: string, vectors: Vector[], client: OpenAI) {
   try {
     const queryResponse = await client.embeddings.create({
       model: "text-embedding-3-large",

@@ -1,6 +1,9 @@
-module.exports = [
+import tseslint from '@typescript-eslint/eslint-plugin';
+import tsparser from '@typescript-eslint/parser';
+
+export default [
   {
-    files: ['*.ts', '*.tsx'],
+    files: ['packages/**/*.ts', 'packages/**/*.tsx', 'src/**/*.ts', 'src/**/*.tsx'],
     languageOptions: {
       ecmaVersion: 12,
       sourceType: 'module',
@@ -9,19 +12,10 @@ module.exports = [
         es2021: true,
         node: true,
       },
-    },
-    languageOptions: {
-      ecmaVersion: 12,
-      sourceType: 'module',
-      globals: {
-        browser: true,
-        es2021: true,
-        node: true,
-      },
-      parser: require('@typescript-eslint/parser'),
+      parser: tsparser,
     },
     plugins: {
-      '@typescript-eslint': require('@typescript-eslint/eslint-plugin'),
+      '@typescript-eslint': tseslint,
     },
     rules: {
       '@typescript-eslint/no-unused-vars': 'error',
@@ -29,7 +23,7 @@ module.exports = [
     },
   },
   {
-    files: ['*.js', '*.jsx'],
+    files: ['packages/**/*.js', 'packages/**/*.jsx', 'src/**/*.js', 'src/**/*.jsx'],
     languageOptions: {
       ecmaVersion: 12,
       sourceType: 'module',

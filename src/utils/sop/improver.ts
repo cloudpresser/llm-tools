@@ -1,6 +1,5 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { client } from './shared';
 import { createPrompt } from './prompt';
 import { extractMarkdownSections, reconstructMarkdown } from './markdownUtils';
 import { searchKnowledgeBase } from './database';
@@ -167,7 +166,7 @@ export async function improveSOP(params: ImproveSopParams): Promise<ImproveSopRe
       }
       throw error;
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     // Handle edge cases
     if (e.constructor.name === "LengthFinishReasonError") {
       console.log("Too many tokens: ", e.message);

@@ -32,5 +32,5 @@ export function createConfiguredTable(data: [string, string][]): string {
     },
   };
 
-  return createTable(data);
+  return createTable(data, config);
 }

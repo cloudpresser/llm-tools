@@ -1,5 +1,5 @@
 import { SOPParams } from './types';
-import { buildVectorDatabase, searchKnowledgeBase, retrieveRelevantDocs } from './database';
+import { buildVectorDatabase, searchKnowledgeBase } from './database';
 import { createPrompt } from './prompt';
 import { generateSOPContent, formatSOPContent } from './aiCompletion';
 import { tavily } from '@tavily/core';

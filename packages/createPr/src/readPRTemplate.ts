@@ -8,7 +8,7 @@ const neonBlue = chalk.hex('#00FFFF');
 const neonPink = chalk.hex('#FF00FF');
 const neonOrange = chalk.hex('#FFA500');
 
-export async function readPRTemplate(cliPath: string): Promise<string> {
+export async function readPRTemplate(): Promise<string> {
   const spinner = ora({
     text: neonBlue('Reading PR template...'),
     spinner: 'dots',
@@ -23,7 +23,7 @@ export async function readPRTemplate(cliPath: string): Promise<string> {
     const template = await fs.readFile(templatePath, 'utf-8');
     spinner.succeed(neonPink('PR template read successfully.'));
     return template;
-  } catch (error) {
+  } catch {
     spinner.fail(neonOrange('Unable to read PR template. Using default template.'));
     return '## Summary:\n\n## Test Plan:\n\n## Review:';
   }
