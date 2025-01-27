@@ -1,4 +1,4 @@
-import { getOpenAiSingleton } from "./getOpenAiSingleton";
+import { getOpenAiSingleton } from ".";
 
 interface GenerateCompletionParams {
   messages?: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;

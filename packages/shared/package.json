@@ -1,0 +1,23 @@
+{
+  "name": "@cloudpresser/shared",
+  "version": "1.0.0",
+  "description": "Shared utility functions",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "axios": "^0.27.2",
+    "chalk": "^5.3.0",
+    "dotenv": "^16.4.5",
+    "ora": "^8.1.0",
+    "openai": "^4.0.0",
+    "simple-git": "^3.27.0",
+    "table": "^6.8.2",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.x.x"
+  }
+}

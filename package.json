@@ -10,6 +10,10 @@
     "sop-generator": "./bin/sop-generator",
     "sop-splitter": "./bin/sop-splitter"
   },
+  "private":"true",
+  "workspaces": [
+    "packages/**"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "jest",

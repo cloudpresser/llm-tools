@@ -1,5 +1,5 @@
-import { generateCompletion } from './utils/openai';
-import { getConfig } from './config';
+import { generateCompletion } from '../openai';
+import { getConfig } from '../config';
 
 
 

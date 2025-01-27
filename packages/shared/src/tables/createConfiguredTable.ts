@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { createTable } from './utils/tableUtils';
+import { createTable } from '.';
 import { TableUserConfig } from 'table';
 
 const neonBlue = chalk.hex('#00FFFF');

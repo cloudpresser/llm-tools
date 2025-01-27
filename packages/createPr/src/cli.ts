@@ -4,14 +4,16 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import chalk from 'chalk';
-import { createConfiguredTable } from './src/createConfiguredTable';
 import ora from 'ora';
-import { createPullRequest } from './src/utils/azureDevops/createPullRequest';
-import { getGitDiff } from './src/getGitDiff';
-import { readPRTemplate } from './src/readPRTemplate';
-import { generateWithAI } from './src/generateWithAI';
-import { generatePRDescription } from './src/generatePRDescription';
-import { getConfig } from './src/config';
+
+import { createPullRequest } from './azureDevops';
+import { readPRTemplate } from './readPRTemplate';
+import { generatePRDescription } from './generatePRDescription';
+
+import { getConfig } from '@cloudpresser/shared';
+import { generateWithAI } from '@cloudpresser/shared';
+import { getGitDiff } from '@cloudpresser/shared';
+import { createConfiguredTable } from '@cloudpresser/shared';
 
 const neonGreen = chalk.hex('#39FF14');
 const neonOrange = chalk.hex('#FFA500');

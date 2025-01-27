@@ -1,6 +1,6 @@
 import yargs from 'yargs';
-import { loadEnv } from './loadEnv';
-import { getCurrentBranch } from './getCurrentBranch';
+import { loadEnv } from '.';
+import { getCurrentBranch } from '../git';
 
 export interface WorkItem {
   id: number;

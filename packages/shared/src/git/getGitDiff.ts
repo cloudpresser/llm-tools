@@ -1,6 +1,6 @@
 import simpleGit from 'simple-git';
 import { summarizeDiff } from './summarizeDiff';
-import { getConfig } from './config';
+import { getConfig } from '../config';
 
 
 

@@ -3,7 +3,7 @@
  # Resolve the directory of the script
  SCRIPT_DIR="$(cd "$(dirname "$(realpath "$0")")" && pwd)"
  # Resolve the path to cli.ts relative to the script directory
- CLI_AI_PATH="$SCRIPT_DIR/../cli.ts"
+ CLI_AI_PATH="$SCRIPT_DIR/../src/cli.ts"
 
  # Debugging output to verify paths
  echo "SCRIPT_DIR: $SCRIPT_DIR"

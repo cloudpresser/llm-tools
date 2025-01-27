@@ -18,7 +18,7 @@ export async function readPRTemplate(cliPath: string): Promise<string> {
   try {
     // Get the directory where the package is installed
     const packageRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-    const templatePath = path.join(packageRoot, 'prTemplate.md');
+    const templatePath = path.join(packageRoot, '/src/prTemplate.md');
     console.log('Template path:', templatePath);
     const template = await fs.readFile(templatePath, 'utf-8');
     spinner.succeed(neonPink('PR template read successfully.'));

@@ -16,11 +16,10 @@ export function findGitRepoRoot(startPath: string): string | null {
 export function loadEnv(): Record<string, string> {
   const gitRoot = findGitRepoRoot(process.cwd());
   const envPaths = [
-    gitRoot ? path.join(gitRoot, '.env') : null,
-    path.join(process.env.HOME || '', '.env'),
-    path.join(process.env.HOME || '', '.config', '.env')
+    gitRoot ? path.join(gitRoot, '.cloudpresser') : null,
+    path.join(process.env.HOME || '', '.cloudpresser'),
+    path.join(process.env.HOME || '', '.config', '.cloudpresser')
   ].filter(Boolean) as string[];
-
   let loadedEnv: Record<string, string> = {};
 
   for (const envPath of envPaths) {

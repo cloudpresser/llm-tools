@@ -1,4 +1,4 @@
-import { WorkItem } from "../../config";
+import { WorkItem } from "./WorkItem";
 
 export interface PullRequestParams {
   organization?: string;

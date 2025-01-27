@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { getConfig } from '../../config';
+import { getConfig } from '../config';
 
 let openai: OpenAI | null = null;
 

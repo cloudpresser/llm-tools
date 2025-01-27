@@ -1,5 +1,4 @@
-import { generateWithAI } from './generateWithAI';
-import { getConfig } from './config';
+import { generateWithAI, getConfig } from '@cloudpresser/shared';
 
 export async function generatePRDescription(gitDiff: string, template: string, isSummary: boolean, isMock: boolean): Promise<string> {
   const config = await getConfig();
