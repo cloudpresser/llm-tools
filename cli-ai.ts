@@ -2,6 +2,7 @@ import readline from 'readline';
 import { execSync } from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import chalk from 'chalk';
 import { createConfiguredTable } from './src/createConfiguredTable';
 import ora from 'ora';
@@ -87,7 +88,7 @@ async function main() {
         spinner: 'dots',
         color: 'cyan'
       }).start();
-      const prTemplate = await readPRTemplate(path.dirname(__filename));
+      const prTemplate = await readPRTemplate(fileURLToPath(new URL('.', import.meta.url)));
       // Modify this part to handle empty gitDiff
       config.description = config.mock
         ? "This is a mock description for the pull request."

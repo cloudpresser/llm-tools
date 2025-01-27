@@ -2,6 +2,7 @@ import ora from 'ora';
 import chalk from 'chalk';
 import fs from 'fs/promises';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 const neonBlue = chalk.hex('#00FFFF');
 const neonPink = chalk.hex('#FF00FF');
@@ -15,7 +16,10 @@ export async function readPRTemplate(cliPath: string): Promise<string> {
   }).start();
 
   try {
-    const templatePath = path.join(cliPath, 'prTemplate.md');
+    // Get the directory where the package is installed
+    const packageRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+    const templatePath = path.join(packageRoot, 'prTemplate.md');
+    console.log('Template path:', templatePath);
     const template = await fs.readFile(templatePath, 'utf-8');
     spinner.succeed(neonPink('PR template read successfully.'));
     return template;
