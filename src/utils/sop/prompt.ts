@@ -172,8 +172,14 @@ ${combinedContext}
       <subsection name="Key Performance Indicators (KPIs)" />
     </section>
     <section name="Procedure">
-      <subsection name="Step 1: [Step Name]" />
-      <subsection name="Step 2: [Step Name]" />
+      <subsection name="Step 1: [Step Name]">
+        <timeframe>[Expected duration/deadline]</timeframe>
+        <responsible>[Role responsible]</responsible>
+      </subsection>
+      <subsection name="Step 2: [Step Name]">
+        <timeframe>[Expected duration/deadline]</timeframe>
+        <responsible>[Role responsible]</responsible>
+      </subsection>
     </section>
     <section name="KPIs" />
     <section name="Documents" />

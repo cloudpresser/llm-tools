@@ -6,8 +6,21 @@ export const sopSchema = z.object({
   title: z.string().describe("The title of the SOP"),
   purpose: z.string().optional().describe("The purpose of the SOP, in Markdown format, starting with a level 2 heading (##)"),
   scope: z.string().optional().describe("The scope of the SOP, in Markdown format, starting with a level 2 heading (##)"),
-  rolesAndResponsibilities: z.string().optional().describe("The roles and responsibilities section of the SOP, in Markdown format, starting with a level 2 heading (##)"),
-  procedure: z.string().optional().describe("The procedure section of the SOP, in Markdown format, starting with a level 2 heading (##), each subsection starting with a level 3 heading (###)"),
+  rolesAndResponsibilities: z.array(z.object({
+    role: z.string().optional().describe("The role or responsibility"),
+    responsibility: z.string().optional().describe("The description of the role or responsibility"),
+    keyPerformanceIndicators: z.array(z.object({
+      metric: z.string().optional().describe("The KPI metric"),
+      target: z.string().optional().describe("The target value or range for the KPI"),
+      frequency: z.string().optional().describe("How often the KPI is measured")
+    })).optional().describe("Key performance indicators for the role performing the responsibility"),
+  })).optional().describe("The roles and responsibilities section of the SOP, in Markdown format, starting with a level 2 heading (##)"),
+  procedure: z.array(z.object({
+    step: z.string().describe("The step name and description"),
+    timeframe: z.string().describe("Expected duration or deadline for the step"),
+    responsible: z.string().describe("Role or person responsible for executing this step"),
+    details: z.string().optional().describe("Additional details, requirements, or notes for this step")
+  })).optional().describe("The procedure steps, each with timeframe and responsible role"),
   documentReferences: z.array(z.object({
     title: z.string().optional().describe("The name of the document or template referenced"),
     type: z.union([
@@ -21,8 +34,8 @@ export const sopSchema = z.object({
       z.literal('image'),
     ]).optional().describe("The type of the document or template referenced"),
     link: z.string().optional().describe("The URL or path to the document or template"),
-    description: z.string().optional().describe("A description of the document or template referenced"),
-  }).describe("A document or template reference")).describe("A list of document or template references, each containing a title, type, and link"),
+    description: z.string().optional().describe("A description of the document or template referenced")
+  })).optional().describe("A list of document or template references, each containing a title, type, and link"),
 });
 
 export type SOPContent = z.infer<typeof sopSchema>;
@@ -65,12 +78,29 @@ Documents, checklists, images, diagrams, flowcharts, SOPs, policies, ...\n`,
     }).join('\n')
   ] : [];
 
+  const rolesAndResponsibilities = content.rolesAndResponsibilities ? [
+    '## Roles and Responsibilities',
+    content.rolesAndResponsibilities.map(item => {
+      const kpis = item.keyPerformanceIndicators?.map(kpi =>
+        `  - ${kpi.metric}: ${kpi.target} (Measured ${kpi.frequency})`
+      ).join('\n') || '';
+      return `### ${item.role}\n${item.responsibility}\n\nKey Performance Indicators:\n${kpis}`;
+    }).join('\n')
+  ] : []
+
+  const procedureSection = content.procedure ? [
+    '## Procedure',
+    content.procedure.map(step => 
+      `### ${step.step}\n**Timeframe**: ${step.timeframe}\n**Responsible**: ${step.responsible}\n\n${step.details || ''}`
+    ).join('\n\n')
+  ] : [];
+
   return [
     `# ${content.title || 'Standard Operating Procedure'}`,
     content.purpose,
     content.scope,
-    content.rolesAndResponsibilities,
-    content.procedure,
+    rolesAndResponsibilities.join('\n'),
+    procedureSection.join('\n\n'),
     documentReferences.join('\n')
   ].join('\n\n');
 }
