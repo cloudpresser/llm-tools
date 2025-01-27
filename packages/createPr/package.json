@@ -7,6 +7,9 @@
     "create-pr": "dist/cli.js"
   },
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -b",
     "start": "npm run build && node dist/cli.js",
