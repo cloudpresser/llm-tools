@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Shared utility functions",
   "main": "src/index.ts",
+  "type": "module",
   "scripts": {
     "build": "tsc -b",
     "prepublishOnly": "npm run build"

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { isString } from 'util';
 import { getConfig, WorkItem } from '@cloudpresser/shared';
-import { createConfiguredTable } from '@cloudpresser/shared';
+import { createConfiguredTable } from '@cloudpresser/shared/src/tables/createConfiguredTable.js';
 import { PullRequestParams } from './PullRequestParams';
 
 export async function createPullRequest(params: PullRequestParams): Promise<number> {

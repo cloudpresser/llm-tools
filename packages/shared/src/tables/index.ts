@@ -1,2 +1,1 @@
-export * from './createConfiguredTable'
-export * from './tableUtils'
+export { createConfiguredTable } from './createConfiguredTable.js'

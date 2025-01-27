@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { loadEnv } from "../../loadEnv";
+import { loadEnv } from "../config";
 
 export function createOpenAIClient() {
   const env = loadEnv();

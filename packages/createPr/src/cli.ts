@@ -90,7 +90,7 @@ async function main() {
         spinner: 'dots',
         color: 'cyan'
       }).start();
-      const prTemplate = await readPRTemplate(fileURLToPath(new URL('.', import.meta.url)));
+      const prTemplate = await readPRTemplate();
       // Modify this part to handle empty gitDiff
       config.description = config.mock
         ? "This is a mock description for the pull request."
