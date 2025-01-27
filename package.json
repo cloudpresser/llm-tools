@@ -14,7 +14,7 @@
     "build": "tsc",
     "test": "jest",
     "start": "npx tsx cli.ts",
-    "start-ai": "npx tsx cli-ai.ts",
+    "start-ai": "npx tsx cli.ts",
     "lint": "eslint .",
     "check-types": "tsc --noEmit"
   },
