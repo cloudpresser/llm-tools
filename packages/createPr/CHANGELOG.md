@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.2.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/create-pr@1.1.0...@cloudpresser/create-pr@1.2.0) (2025-01-27)
+
+
+### Features
+
+* **createPr:** add new package.json fields ([17127c7](https://github.com/cloudpresser/llm-tools/commit/17127c71dcaa8e39a15b3f8c039f314020ac20d6))
+
+
+
+
+
 # 1.1.0 (2025-01-27)
 
 
