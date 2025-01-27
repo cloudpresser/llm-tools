@@ -8,6 +8,7 @@
     "build": "tsc -b",
     "prepublishOnly": "npm run build"
   },
+  "private": false,
   "dependencies": {
     "axios": "^0.27.2",
     "chalk": "^5.3.0",
@@ -20,5 +21,6 @@
   },
   "devDependencies": {
     "typescript": "^5.x.x"
-  }
+  },
+  "gitHead": "e4e72f4e5f307227a7bf836b83d5347c4141eda0"
 }
