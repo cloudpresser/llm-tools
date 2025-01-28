@@ -115,7 +115,7 @@ async function main() {
       const tempFile = path.join(process.cwd(), `${filePrefix}_temp.md`);
       await fs.writeFile(tempFile, initialContent);
 
-      const editor = ['nvim', 'nano', 'vim'].find(isCommandAvailable);
+      const editor = ['nvim', 'code', 'nano', 'vim'].find(isCommandAvailable);
       if (!editor) {
         console.log(neonOrange('No suitable editor found. Skipping manual edit.'));
         spinner.fail(neonOrange('Error while editing.'));
@@ -123,7 +123,8 @@ async function main() {
       }
 
       try {
-        execSync(`${editor} ${tempFile}`, { stdio: 'inherit' });
+        const editCommand = editor === 'code' ? `${editor} --wait ${tempFile}` : `${editor} ${tempFile}`;
+        execSync(editCommand, { stdio: 'inherit' });
         const editedContent = await fs.readFile(tempFile, 'utf-8');
         await fs.unlink(tempFile);
         const result = editedContent.trim();
