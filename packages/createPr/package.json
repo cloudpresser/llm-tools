@@ -9,8 +9,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "type": "module",
   "scripts": {
-    "build": "esbuild src/cli.ts --bundle --platform=node --outdir=dist --format=cjs --sourcemap",
+    "build": "esbuild src/cli.ts --bundle --platform=node --outdir=dist --format=esm --sourcemap",
     "start": "npm run build && node dist/cli.js",
     "clean": "rimraf dist",
     "type-check": "tsc --noEmit"
