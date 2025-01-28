@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.5.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/create-pr@1.4.0...@cloudpresser/create-pr@1.5.0) (2025-01-28)
+
+
+### Features
+
+* **createPr:** add support for ESM module format ([d89f8e2](https://github.com/cloudpresser/llm-tools/commit/d89f8e2fae341c599b115e701a27759b64f9b2ab))
+
+
+
+
+
 # [1.4.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/create-pr@1.3.0...@cloudpresser/create-pr@1.4.0) (2025-01-28)
 
 
