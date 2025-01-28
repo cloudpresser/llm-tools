@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "build": "tsc -b",
+    "build": "esbuild src/index.ts --bundle --platform=node --outdir=dist --format=esm --sourcemap --packages=external",
     "prepublishOnly": "npm run build"
   },
   "private": false,
@@ -23,27 +23,9 @@
     "yargs": "^17.7.2"
   },
   "devDependencies": {
-    "typescript": "^5.x.x"
-  },
-  "gitHead": "e4e72f4e5f307227a7bf836b83d5347c4141eda0"
-}
-{
-  "name": "@cloudpresser/shared",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "dist/index.js",
-  "scripts": {
-    "build": "esbuild src/index.ts --bundle --platform=node --outdir=dist --format=esm --sourcemap --packages=external",
-    "clean": "rimraf dist"
-  },
-  "dependencies": {
-    "axios": "^0.27.2",
-    "chalk": "^5.3.0",
-    "simple-git": "^3.22.0"
-  },
-  "devDependencies": {
     "esbuild": "^0.20.0",
     "rimraf": "^5.0.5",
     "typescript": "^5.x.x"
-  }
+  },
+  "gitHead": "e4e72f4e5f307227a7bf836b83d5347c4141eda0"
 }

@@ -1,12 +1,4 @@
 {
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "outDir": "../../dist/shared-utils",
-    "rootDir": "./src"
-  },
-  "include": ["src/**/*"]
-}
-{
   "compilerOptions": {
     "target": "ES2020",
     "module": "ES2020",
