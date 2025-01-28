@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.4.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/create-pr@1.3.0...@cloudpresser/create-pr@1.4.0) (2025-01-28)
+
+
+### Bug Fixes
+
+* **createPr:** update import path for createConfiguredTable ([5d0e4ef](https://github.com/cloudpresser/llm-tools/commit/5d0e4ef20bf65960bb2e0dde3562a3440224af63))
+
+
+### Features
+
+* **createPr:** remove create-pr bin script ([e8592ed](https://github.com/cloudpresser/llm-tools/commit/e8592ed47123a885c953d60cec632e29c0dbbe2f))
+* **createPr:** update build script to use esbuild ([7d004b6](https://github.com/cloudpresser/llm-tools/commit/7d004b605bb2eada2c672c00211fdcdc10fa9d52))
+
+
+
+
+
 # [1.3.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/create-pr@1.2.0...@cloudpresser/create-pr@1.3.0) (2025-01-27)
 
 
