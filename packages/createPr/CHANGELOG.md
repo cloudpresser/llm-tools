@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.6.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/create-pr@1.5.0...@cloudpresser/create-pr@1.6.0) (2025-01-28)
+
+
+### Features
+
+* **createPr:** add external dependencies to esbuild config ([457806a](https://github.com/cloudpresser/llm-tools/commit/457806a04c7bd9fa1116d0702e4dee0212ac769a))
+
+
+
+
+
 # [1.5.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/create-pr@1.4.0...@cloudpresser/create-pr@1.5.0) (2025-01-28)
 
 
