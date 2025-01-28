@@ -35,7 +35,7 @@ async function getWorkItems(authToken: string, organizationId: string, project: 
     );
 
     return assignedWorkItems;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching work items:', error);
     process.exit(1);
   }
