@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.7.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/create-pr@1.6.2...@cloudpresser/create-pr@1.7.0) (2025-01-28)
+
+
+### Features
+
+* **createPr:** add support for VS Code as an editor ([f4f40ec](https://github.com/cloudpresser/llm-tools/commit/f4f40ec146b250b56de25abc980c21f26b2c480e))
+
+
+
+
+
 ## [1.6.2](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/create-pr@1.6.1...@cloudpresser/create-pr@1.6.2) (2025-01-28)
 
 **Note:** Version bump only for package @cloudpresser/create-pr
