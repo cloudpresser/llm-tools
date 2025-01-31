@@ -53,7 +53,7 @@ export async function createPullRequest(params: PullRequestParams): Promise<numb
     const response = await axios.post(pullRequestUrl, requestParams, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${Buffer.from(`:${personalAccessToken}`).toString('base64')}`,
+        'Authorization': `Bearer ${personalAccessToken}`,
       },
     });
 
