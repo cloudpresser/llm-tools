@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.4.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/shared@1.3.3...@cloudpresser/shared@1.4.0) (2025-01-31)
+
+
+### Features
+
+* **createPr:** add support for associating work items with pull requests ([b610da9](https://github.com/cloudpresser/llm-tools/commit/b610da9b28e0b2e5b496d00825fb7dab49ed6b20))
+
+
+
+
+
 ## [1.3.3](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/shared@1.3.2...@cloudpresser/shared@1.3.3) (2025-01-31)
 
 **Note:** Version bump only for package @cloudpresser/shared
