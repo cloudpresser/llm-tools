@@ -61,7 +61,7 @@ export async function getConfig(): Promise<Config> {
     dryRun: cliArgs.dryRun || false,
     targetBranch: cliArgs.targetBranch || env.TARGET_BRANCH || (currentBranch === defaultTargetBranch ? 'develop' : defaultTargetBranch),
     sourceBranch: cliArgs.sourceBranch || currentBranch,
-    workItems: cliArgs.workItems as WorkItem[] || [],
+    workItems: cliArgs.workItems ? [{ id: Number(cliArgs.workItems) }] : [],
     userPrompt: cliArgs.userPrompt || env.USER_PROMPT || '',
     debug: cliArgs.debug || Boolean(env.DEBUG != '' && env.DEBUG) || false,
   };

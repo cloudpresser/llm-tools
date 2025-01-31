@@ -38,7 +38,8 @@ async function main() {
     ['OPENAI_API_KEY', neonPink((config.openaiApiKey || 'Not set').substring(0, 10) + '...')],
     ['SOURCE_BRANCH', neonPink(config.sourceBranch)],
     ['TARGET_BRANCH', neonPink(config.targetBranch)],
-    ['WORK_ITEMS', neonPink(config.workItems.map(item => item.id).join(', ') || 'None')],
+    ['WORK_ITEMS', neonPink(config.workItems?.length ? config.workItems.map(item => item.id).join(', ') : 'None')],
+    ['USER_PROMPT', neonPink(config.userPrompt || 'Not set')],
   ];
   console.log(createConfiguredTable(configTable));
 
