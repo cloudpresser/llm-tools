@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.9.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/create-pr@1.8.0...@cloudpresser/create-pr@1.9.0) (2025-01-31)
+
+
+### Bug Fixes
+
+* **createPr:** update authorization header for Azure DevOps API ([3932bd7](https://github.com/cloudpresser/llm-tools/commit/3932bd75185a9c0fd9012acc97da8d4bf96aca1a))
+
+
+### Features
+
+* **createPr:** add Azure Personal Access Token validation ([9317a6d](https://github.com/cloudpresser/llm-tools/commit/9317a6d63801abbc5d3d77e4ef25cdf70a017ad8))
+
+
+
+
+
 # [1.8.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/create-pr@1.7.0...@cloudpresser/create-pr@1.8.0) (2025-01-31)
 
 
