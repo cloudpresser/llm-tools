@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.8.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/create-pr@1.7.0...@cloudpresser/create-pr@1.8.0) (2025-01-31)
+
+
+### Features
+
+* **createPr:** enhance PR description generation prompts ([1acb16f](https://github.com/cloudpresser/llm-tools/commit/1acb16ff523f139f52bb301719b554d6eebcf676))
+
+
+
+
+
 # [1.7.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/create-pr@1.6.2...@cloudpresser/create-pr@1.7.0) (2025-01-28)
 
 
