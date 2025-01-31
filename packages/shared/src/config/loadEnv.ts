@@ -18,20 +18,21 @@ export function loadEnv(): Record<string, string> {
   const envPaths = [
     gitRoot ? path.join(gitRoot, '.cloudpresser') : null,
     path.join(process.env.HOME || '', '.cloudpresser'),
-    path.join(process.env.HOME || '', '.config', '.cloudpresser')
+    path.join(process.env.HOME || '', '.config', '.cloudpresser'),
+    '.cloudpresser' // Also check in current directory
   ].filter(Boolean) as string[];
   let loadedEnv: Record<string, string> = {};
 
   for (const envPath of envPaths) {
     if (fs.existsSync(envPath)) {
-      const result = dotenv.config({ path: envPath });
+      const result = dotenv.config({ path: envPath, override: true });
       if (!result.error && result.parsed) {
         loadedEnv = { ...loadedEnv, ...result.parsed };
       }
     }
   }
 
-  return { ...loadedEnv, ...process.env as Record<string, string> };
+  return { ...process.env as Record<string, string>, ...loadedEnv };
 }
 
 export default loadEnv;
