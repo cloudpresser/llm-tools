@@ -6,6 +6,7 @@ import path from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 
+import axios from 'axios';
 import { createPullRequest } from './azureDevops';
 import { readPRTemplate } from './readPRTemplate';
 import { generatePRDescription } from './generatePRDescription';
@@ -20,9 +21,35 @@ const neonOrange = chalk.hex('#FFA500');
 const neonBlue = chalk.hex('#00FFFF');
 const neonPink = chalk.hex('#FF00FF');
 
+async function testAzureToken(token: string, organization: string): Promise<void> {
+  try {
+    const response = await axios.get(`https://dev.azure.com/${organization}/_apis/projects?api-version=6.0`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    if (response.status === 200) {
+      console.log(response)
+      console.log(neonGreen('Azure Personal Access Token is valid.'));
+    }
+  } catch {
+    throw new Error('Azure Personal Access Token is invalid or expired. Please check your token.');
+  }
+}
 async function main() {
   console.log('Starting main function');
   const config = await getConfig();
+
+  // Test the Azure Personal Access Token
+  console.log(neonBlue('Testing Azure Personal Access Token...'));
+  try {
+    await testAzureToken(config.personalAccessToken, config.organization);
+    console.log(neonGreen('Azure Personal Access Token is valid.'));
+  } catch (error: unknown) {
+    console.error(neonOrange('Failed to validate Azure Personal Access Token:'), error instanceof Error ? error.message : error);
+    console.error(neonOrange('Failed to validate Azure Personal Access Token:'), error.message);
+    process.exit(1);
+  }
 
   const rl = readline.createInterface({
     input: process.stdin,
