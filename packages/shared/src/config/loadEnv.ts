@@ -23,10 +23,10 @@ export function loadEnv(): Record<string, string> {
   ].filter(Boolean) as string[];
   let loadedEnv: Record<string, string> = {};
 
-  console.log(`Looking for environment files in ${envPaths.join(', ')}`);
+  // console.log(`Looking for environment files in ${envPaths.join(', ')}`);
   for (const envPath of envPaths) {
     if (fs.existsSync(envPath)) {
-      console.log(`Loading environment from ${envPath}`);
+      // console.log(`Loading environment from ${envPath}`);
       const result = dotenv.config({ path: envPath, override: true });
       if (!result.error && result.parsed) {
         loadedEnv = { ...loadedEnv, ...result.parsed };
