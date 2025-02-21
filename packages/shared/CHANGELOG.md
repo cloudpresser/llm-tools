@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.6.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/shared@1.5.0...@cloudpresser/shared@1.6.0) (2025-02-21)
+
+
+### Features
+
+* **shared:** add logging for environment file loading ([ac9752c](https://github.com/cloudpresser/llm-tools/commit/ac9752c2e95fc8832a01bd87d3dcbf3f8a6676de))
+
+
+
+
+
 # [1.5.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/shared@1.4.0...@cloudpresser/shared@1.5.0) (2025-02-21)
 
 
