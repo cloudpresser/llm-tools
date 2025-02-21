@@ -40,16 +40,6 @@ async function main() {
   console.log('Starting main function');
   const config = await getConfig();
 
-  // Test the Azure Personal Access Token
-  console.log(neonBlue('Testing Azure Personal Access Token...'));
-  try {
-    await testAzureToken(config.personalAccessToken, config.organization);
-    console.log(neonGreen('Azure Personal Access Token is valid.'));
-  } catch (error: unknown) {
-    console.error(neonOrange('Failed to validate Azure Personal Access Token:'), error instanceof Error ? error.message : error);
-    console.error(neonOrange('Failed to validate Azure Personal Access Token:'), error.message);
-    process.exit(1);
-  }
 
   const rl = readline.createInterface({
     input: process.stdin,
@@ -72,6 +62,17 @@ async function main() {
 
   if (!config.personalAccessToken) {
     throw new Error('Error: Personal Access Token is not set in the .env file or provided as an argument.');
+  }
+
+  // Test the Azure Personal Access Token
+  console.log(neonBlue('Testing Azure Personal Access Token...'));
+  try {
+    await testAzureToken(config.personalAccessToken, config.organization);
+    console.log(neonGreen('Azure Personal Access Token is valid.'));
+  } catch (error: unknown) {
+    console.error(neonOrange('Failed to validate Azure Personal Access Token:'), error instanceof Error ? error.message : error);
+    console.error(neonOrange('Failed to validate Azure Personal Access Token:'), error.message);
+    process.exit(1);
   }
 
   try {
