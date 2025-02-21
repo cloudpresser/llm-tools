@@ -25,6 +25,7 @@ export function loadEnv(): Record<string, string> {
 
   for (const envPath of envPaths) {
     if (fs.existsSync(envPath)) {
+      console.log(`Loading environment from ${envPath}`);
       const result = dotenv.config({ path: envPath, override: true });
       if (!result.error && result.parsed) {
         loadedEnv = { ...loadedEnv, ...result.parsed };
