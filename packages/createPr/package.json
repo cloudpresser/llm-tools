@@ -1,6 +1,6 @@
 {
   "name": "@cloudpresser/create-pr",
-  "version": "1.10.3",
+  "version": "1.10.4",
   "description": "CLI tool to create pull requests in Azure DevOps",
   "main": "dist/cli.js",
   "bin": {
