@@ -1,9 +1,9 @@
 import axios from 'axios';
-import { isString } from 'util';
 import { Buffer } from 'buffer';
 import { getConfig, WorkItem } from '@cloudpresser/shared';
 import { createConfiguredTable } from '@cloudpresser/shared';
 import { PullRequestParams } from './PullRequestParams';
+const isString = (value) => typeof value === "string";
 
 const apiVersion = '7.2';
 
