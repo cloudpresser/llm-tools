@@ -15,7 +15,7 @@ export async function generateCompletion(params: GenerateCompletionParams): Prom
     prompt,
     maxTokens = 1000,
     temperature = 0,
-    model = 'gpt-4o',
+    model = 'gpt-5.2',
     isMock = false,
   } = params;
 
@@ -31,7 +31,7 @@ export async function generateCompletion(params: GenerateCompletionParams): Prom
       response = await openai.chat.completions.create({
         model,
         messages,
-        max_tokens: maxTokens,
+        max_completion_tokens: maxTokens,
         temperature,
       });
       return response.choices?.[0]?.message?.content?.trim() || '';
