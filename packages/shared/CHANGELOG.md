@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [1.7.0](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/shared@1.6.1...@cloudpresser/shared@1.7.0) (2026-01-06)
+
+
+### Features
+
+* **openai:** update model to gpt-5.2 in generateCompletion ([388ecf7](https://github.com/cloudpresser/llm-tools/commit/388ecf7cb448bfa26d6525e952d85bb18607c280))
+
+
+
+
+
 ## [1.6.1](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/shared@1.6.0...@cloudpresser/shared@1.6.1) (2025-02-21)
 
 **Note:** Version bump only for package @cloudpresser/shared
