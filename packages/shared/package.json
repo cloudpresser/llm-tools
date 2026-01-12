@@ -1,6 +1,6 @@
 {
   "name": "@cloudpresser/shared",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "Shared utility functions",
   "main": "dist/index.js",
   "type": "module",
