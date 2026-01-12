@@ -29,7 +29,7 @@ async function testAzureToken(token: string, organization: string): Promise<void
       }
     });
     if (response.status === 200) {
-      console.log(response)
+      // console.log(response)
       console.log(neonGreen('Azure Personal Access Token is valid.'));
     }
   } catch {
@@ -83,7 +83,7 @@ async function main() {
     }).start();
     const gitDiff = await getGitDiff();
     spinner.succeed(neonPink('Git diff fetched.'));
-    console.log(gitDiff)
+    console.log(gitDiff.summary)
     // Add this log to check the git diff content
     console.log(neonGreen(`Git diff length: ${gitDiff.diff.length} characters`));
 
@@ -110,7 +110,7 @@ async function main() {
       config.title = config.mock
         ? 'Mock Pull Request Title'
         : await generateWithAI(titlePrompt, gitDiff.summary || 'No changes detected', false, config.mock);
-      titleSpinner.succeed(neonPink('Pull request title generated.'));
+      titleSpinner.succeed(neonPink('Pull request title generated: ' + neonGreen(config.title)));
     }
 
     if (!config.description) {

@@ -13,7 +13,7 @@ export async function getGitDiff(): Promise<{ diff: string; summary: string }> {
   try {
     // Get the current branch name
     const currentBranch = await git.revparse(['--abbrev-ref', 'HEAD']);
-    console.log(`Current branch: ${currentBranch}`);
+    // console.log(`Current branch: ${currentBranch}`);
 
     // Get the merge base between the current branch and target branch
     const mergeBase = await git.raw(['merge-base', config.targetBranch, currentBranch]);
@@ -23,7 +23,7 @@ export async function getGitDiff(): Promise<{ diff: string; summary: string }> {
       return { diff: '', summary: 'No changes detected or new branch with no common ancestor.' };
     }
 
-    console.log(`Merge base: ${mergeBase.trim()}`);
+    // console.log(`Merge base: ${mergeBase.trim()}`);
 
     // Get the diff between the merge base and the current branch
     const diff = await git.diff([mergeBase.trim(), currentBranch, '-p']);
@@ -34,7 +34,7 @@ export async function getGitDiff(): Promise<{ diff: string; summary: string }> {
       return { diff: '', summary: 'No changes detected' };
     }
 
-    console.log(`Diff length: ${diff.length} characters`);
+    // console.log(`Diff length: ${diff.length} characters`);
 
     if (typeof diff !== 'string') {
       console.error('Unexpected diff format:', diff);
