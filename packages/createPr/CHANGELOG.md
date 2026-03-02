@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.10.7](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/create-pr@1.10.6...@cloudpresser/create-pr@1.10.7) (2026-03-02)
+
+
+### Bug Fixes
+
+* **createPr:** add skip check in ask function ([b937786](https://github.com/cloudpresser/llm-tools/commit/b937786094d3a6b22993d2b6bd17627bab23a852))
+
+
+
+
+
 ## [1.10.6](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/create-pr@1.10.5...@cloudpresser/create-pr@1.10.6) (2026-01-12)
 
 **Note:** Version bump only for package @cloudpresser/create-pr
