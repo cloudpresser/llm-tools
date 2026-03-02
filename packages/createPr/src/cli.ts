@@ -167,7 +167,9 @@ async function main() {
 
 
     // Function to ask user if they want to edit
-    async function askToEdit(prompt: string): Promise<boolean> {
+    async function ask(prompt: string): Promise<boolean> {
+      const { skip } = await getConfig()
+      if (skip) return false
       return new Promise((resolve) => {
         const rl = readline.createInterface({
           input: process.stdin,
@@ -192,7 +194,7 @@ async function main() {
     console.log(createConfiguredTable(prDetailsEditTitle));
 
     // Ask if user wants to edit title
-    const editTitle = await askToEdit('Do you want to edit the pull request title? (y/n) ');
+    const editTitle = await ask('Do you want to edit the pull request title? (y/n) ');
     if (editTitle) {
       config.title = await openEditor(config.title, 'pr_title');
     }
@@ -209,7 +211,7 @@ async function main() {
     console.log(createConfiguredTable(prDetailsEditDescription));
 
     // Ask if user wants to edit description
-    const editDescription = await askToEdit('Do you want to edit the pull request description? (y/n) ');
+    const editDescription = await ask('Do you want to edit the pull request description? (y/n) ');
     if (editDescription) {
       config.description = await openEditor(config.description, 'pr_description');
     }
@@ -219,9 +221,9 @@ async function main() {
     if (config.dryRun) {
       console.log(neonGreen('Dry run mode enabled. No pull request will be created.'));
     } else {
-      const confirm = await askToEdit('Do you want to create this pull request? (y/n) ');
+      const confirm = await ask('Do you want to create this pull request? (y/n) ');
 
-      if (!confirm) {
+      if ((!confirm) && !config.skip) {
         console.log(neonGreen('Pull request creation cancelled.'));
         rl.close();
         return;
