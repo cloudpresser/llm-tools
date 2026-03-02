@@ -14,9 +14,21 @@ export async function getGitDiff(): Promise<{ diff: string; summary: string }> {
     // Use the configured source branch instead of the currently checked-out branch
     const sourceBranch = config.sourceBranch;
 
+    const currentBranch = (await git.revparse(['--abbrev-ref', 'HEAD'])).trim();
+
     if (config.debug) {
-      console.log(`Source branch: ${sourceBranch}`);
-      console.log(`Target branch: ${config.targetBranch}`);
+      console.log(`[debug] Current branch (HEAD): ${currentBranch}`);
+      console.log(`[debug] Source branch (config): ${sourceBranch}`);
+      console.log(`[debug] Target branch (config): ${config.targetBranch}`);
+      if (currentBranch !== sourceBranch) {
+        console.log(`[debug] WARNING: HEAD (${currentBranch}) differs from sourceBranch (${sourceBranch})`);
+      }
+
+      // Log the resolved commits for each ref
+      const sourceCommit = (await git.revparse([sourceBranch])).trim();
+      const targetCommit = (await git.revparse([config.targetBranch])).trim();
+      console.log(`[debug] Source branch resolves to: ${sourceCommit}`);
+      console.log(`[debug] Target branch resolves to: ${targetCommit}`);
     }
 
     // Get the merge base between the source branch and target branch
@@ -28,7 +40,8 @@ export async function getGitDiff(): Promise<{ diff: string; summary: string }> {
     }
 
     if (config.debug) {
-      console.log(`Merge base: ${mergeBase.trim()}`);
+      console.log(`[debug] Merge base: ${mergeBase.trim()}`);
+      console.log(`[debug] Equivalent git command: git diff ${mergeBase.trim()} ${sourceBranch}`);
     }
 
     // Get the diff between the merge base and the source branch
@@ -40,8 +53,6 @@ export async function getGitDiff(): Promise<{ diff: string; summary: string }> {
       return { diff: '', summary: 'No changes detected' };
     }
 
-    // console.log(`Diff length: ${diff.length} characters`);
-
     if (typeof diff !== 'string') {
       console.error('Unexpected diff format:', diff);
       return { diff: '', summary: 'Error: Invalid diff format' };
@@ -50,6 +61,17 @@ export async function getGitDiff(): Promise<{ diff: string; summary: string }> {
     if (diff.trim() === '') {
       console.log('Empty diff received.');
       return { diff: '', summary: 'No changes detected' };
+    }
+
+    if (config.debug) {
+      // Log diff metadata instead of the full diff content
+      const files = diff.match(/^diff --git a\/.+ b\/.+$/gm) || [];
+      const fileNames = files.map(f => {
+        const match = f.match(/^diff --git a\/.+ b\/(.+)$/);
+        return match ? match[1] : f;
+      });
+      console.log(`[debug] Diff stats: ${diff.length} chars, ${files.length} files changed`);
+      console.log(`[debug] Files in diff:\n${fileNames.map(f => `  - ${f}`).join('\n')}`);
     }
 
     // Generate a summary of the diff
