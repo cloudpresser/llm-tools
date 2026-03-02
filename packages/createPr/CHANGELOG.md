@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.10.8](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/create-pr@1.10.7...@cloudpresser/create-pr@1.10.8) (2026-03-02)
+
+**Note:** Version bump only for package @cloudpresser/create-pr
+
+
+
+
+
 ## [1.10.7](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/create-pr@1.10.6...@cloudpresser/create-pr@1.10.7) (2026-03-02)
 
 
