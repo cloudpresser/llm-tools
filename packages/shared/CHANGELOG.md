@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.7.5](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/shared@1.7.4...@cloudpresser/shared@1.7.5) (2026-03-02)
+
+
+### Bug Fixes
+
+* **shared:** add --skip flag to Config and CLI args ([6d9e7d6](https://github.com/cloudpresser/llm-tools/commit/6d9e7d6ddcd8c79b962ef891c32516ddb5ae4260))
+
+
+
+
+
 ## [1.7.4](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/shared@1.7.3...@cloudpresser/shared@1.7.4) (2026-03-02)
 
 
