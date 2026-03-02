@@ -13,39 +13,46 @@ export async function getGitDiff(): Promise<{ diff: string; summary: string }> {
   try {
     // Use the configured source branch instead of the currently checked-out branch
     const sourceBranch = config.sourceBranch;
+    const targetBranch = config.targetBranch;
 
     const currentBranch = (await git.revparse(['--abbrev-ref', 'HEAD'])).trim();
+
+    // Extract remote name from target branch (e.g. "origin" from "origin/onboarding")
+    const remoteMatch = targetBranch.match(/^([^/]+)\//);
+    if (remoteMatch) {
+      const remote = remoteMatch[1];
+      if (config.debug) {
+        console.log(`[debug] Fetching remote '${remote}' to ensure target branch is up-to-date...`);
+      }
+      try {
+        await git.fetch(remote);
+      } catch (fetchError) {
+        console.warn(`Warning: Failed to fetch remote '${remote}':`, (fetchError as Error).message);
+      }
+    }
 
     if (config.debug) {
       console.log(`[debug] Current branch (HEAD): ${currentBranch}`);
       console.log(`[debug] Source branch (config): ${sourceBranch}`);
-      console.log(`[debug] Target branch (config): ${config.targetBranch}`);
+      console.log(`[debug] Target branch (config): ${targetBranch}`);
       if (currentBranch !== sourceBranch) {
         console.log(`[debug] WARNING: HEAD (${currentBranch}) differs from sourceBranch (${sourceBranch})`);
       }
 
       // Log the resolved commits for each ref
       const sourceCommit = (await git.revparse([sourceBranch])).trim();
-      const targetCommit = (await git.revparse([config.targetBranch])).trim();
+      const targetCommit = (await git.revparse([targetBranch])).trim();
       console.log(`[debug] Source branch resolves to: ${sourceCommit}`);
       console.log(`[debug] Target branch resolves to: ${targetCommit}`);
     }
 
-    // Get the merge base between the source branch and target branch
-    const mergeBase = await git.raw(['merge-base', config.targetBranch, sourceBranch]);
-
-    if (!mergeBase.trim()) {
-      console.log('No merge base found. This might be a new branch with no common ancestor.');
-      return { diff: '', summary: 'No changes detected or new branch with no common ancestor.' };
-    }
-
     if (config.debug) {
-      console.log(`[debug] Merge base: ${mergeBase.trim()}`);
-      console.log(`[debug] Equivalent git command: git diff ${mergeBase.trim()} ${sourceBranch}`);
+      console.log(`[debug] Equivalent git command: git diff ${targetBranch} ${sourceBranch}`);
     }
 
-    // Get the diff between the merge base and the source branch
-    const diff = await git.diff([mergeBase.trim(), sourceBranch, '-p']);
+    // Diff source against target directly (two-dot diff).
+    // This shows exactly what would change in the target branch if source were merged.
+    const diff = await git.diff([targetBranch, sourceBranch, '-p']);
 
     if (!diff) {
       console.log('No changes detected in the current branch compared to main.');
