@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.7.4](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/shared@1.7.3...@cloudpresser/shared@1.7.4) (2026-03-02)
+
+
+### Bug Fixes
+
+* **shared:** use two-dot diff (target vs source) and fetch remote before diffing ([9808835](https://github.com/cloudpresser/llm-tools/commit/98088351d1ec4a20fcda6095baf0b075ef37dc2d))
+
+
+
+
+
 ## [1.7.3](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/shared@1.7.2...@cloudpresser/shared@1.7.3) (2026-03-02)
 
 
