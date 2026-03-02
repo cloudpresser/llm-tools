@@ -16,6 +16,7 @@ export interface Config {
   openaiApiKey: string;
   mock: boolean;
   dryRun: boolean;
+  skip: boolean;
   targetBranch: string;
   sourceBranch: string;
   workItems: WorkItem[];
@@ -34,6 +35,7 @@ function getCliArgs(): Partial<Config> {
     .option('openaiApiKey', { type: 'string' })
     .option('mock', { type: 'boolean', default: false })
     .option('dryRun', { type: 'boolean', default: false })
+    .option('skip', { type: 'boolean', default: false })
     .option('targetBranch', { type: 'string' })
     .option('sourceBranch', { type: 'string' })
     .option('workItems', { type: 'array' })
@@ -59,6 +61,7 @@ export async function getConfig(): Promise<Config> {
     openaiApiKey: cliArgs.openaiApiKey || env.OPENAI_API_KEY || '',
     mock: cliArgs.mock || false,
     dryRun: cliArgs.dryRun || false,
+    skip: cliArgs.skip || false,
     targetBranch: cliArgs.targetBranch || env.TARGET_BRANCH || (currentBranch === defaultTargetBranch ? 'develop' : defaultTargetBranch),
     sourceBranch: cliArgs.sourceBranch || currentBranch,
     workItems: cliArgs.workItems ? [{ id: Number(cliArgs.workItems) }] : [],
