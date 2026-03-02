@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.7.3](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/shared@1.7.2...@cloudpresser/shared@1.7.3) (2026-03-02)
+
+
+### Bug Fixes
+
+* **shared:** improve debug logging with diff metadata instead of raw content ([984a740](https://github.com/cloudpresser/llm-tools/commit/984a7405461903c6ae40e07d3e44456660763f61))
+* **shared:** stop dumping raw diff to console in debug mode ([2c21f65](https://github.com/cloudpresser/llm-tools/commit/2c21f6599925cb99c7165a6cf55183f5ebe80787))
+
+
+
+
+
 ## [1.7.2](https://github.com/cloudpresser/llm-tools/compare/@cloudpresser/shared@1.7.1...@cloudpresser/shared@1.7.2) (2026-03-02)
 
 
