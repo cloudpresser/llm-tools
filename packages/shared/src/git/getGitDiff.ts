@@ -11,22 +11,28 @@ export async function getGitDiff(): Promise<{ diff: string; summary: string }> {
     return { diff: 'This is a mock diff', summary: 'This is a mock summary' };
   }
   try {
-    // Get the current branch name
-    const currentBranch = await git.revparse(['--abbrev-ref', 'HEAD']);
-    // console.log(`Current branch: ${currentBranch}`);
+    // Use the configured source branch instead of the currently checked-out branch
+    const sourceBranch = config.sourceBranch;
 
-    // Get the merge base between the current branch and target branch
-    const mergeBase = await git.raw(['merge-base', config.targetBranch, currentBranch]);
+    if (config.debug) {
+      console.log(`Source branch: ${sourceBranch}`);
+      console.log(`Target branch: ${config.targetBranch}`);
+    }
+
+    // Get the merge base between the source branch and target branch
+    const mergeBase = await git.raw(['merge-base', config.targetBranch, sourceBranch]);
 
     if (!mergeBase.trim()) {
       console.log('No merge base found. This might be a new branch with no common ancestor.');
       return { diff: '', summary: 'No changes detected or new branch with no common ancestor.' };
     }
 
-    // console.log(`Merge base: ${mergeBase.trim()}`);
+    if (config.debug) {
+      console.log(`Merge base: ${mergeBase.trim()}`);
+    }
 
-    // Get the diff between the merge base and the current branch
-    const diff = await git.diff([mergeBase.trim(), currentBranch, '-p']);
+    // Get the diff between the merge base and the source branch
+    const diff = await git.diff([mergeBase.trim(), sourceBranch, '-p']);
 
     if (!diff) {
       console.log('No changes detected in the current branch compared to main.');
